@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="test._templates" pattern="file:tests/_templates.py" />
+</component>
