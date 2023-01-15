@@ -25,11 +25,11 @@ from object_colors import Color as _Color
 
 from ._version import __version__
 
-NAME = __name__.split(".", maxsplit=1)[0]
-GIT_DIR = ".git"
-INFO = 20
-WARNING = 30
-ERROR = 40
+_NAME = __name__.split(".", maxsplit=1)[0]
+_GIT_DIR = ".git"
+_INFO = 20
+_WARNING = 30
+_ERROR = 40
 
 _color = _Color()
 
@@ -40,7 +40,7 @@ class _Parser(_ArgumentParser):
     def __init__(self) -> None:
         super().__init__(
             __version__,
-            prog=_color.cyan.get(NAME),
+            prog=_color.cyan.get(_NAME),
             description="Checkout repos to current cookiecutter config",
         )
         self._add_arguments()
@@ -126,7 +126,7 @@ def temporary_directory() -> _t.Generator[_Path, None, None]:
 
 def _report(level: int, repo: _Path, message: str) -> None:
     ident = (15 - len(str(repo))) * " "
-    color = {INFO: _color.green, WARNING: _color.yellow, ERROR: _color.red}
+    color = {_INFO: _color.green, _WARNING: _color.yellow, _ERROR: _color.red}
     print(f"[{color[level].get(repo)}{ident}] {message}")
 
 
@@ -136,7 +136,7 @@ def main() -> int:
     :return: Exit status.
     """
     parser = _Parser()
-    cache_dir = _Path(_appdirs.user_cache_dir(NAME))
+    cache_dir = _Path(_appdirs.user_cache_dir(_NAME))
     git = _Git()
     with temporary_directory() as temp:
         template = temp / parser.args.path.name
@@ -145,17 +145,17 @@ def main() -> int:
         defaults = _json.loads(config.read_text(encoding="utf-8"))
         for repo in parser.args.repos:
             pyproject_toml = repo / "pyproject.toml"
-            git_dir = repo / GIT_DIR
+            git_dir = repo / _GIT_DIR
             if not repo.is_dir():
-                _report(WARNING, repo, "does not exist")
+                _report(_WARNING, repo, "does not exist")
                 continue
 
             if not git_dir.is_dir():
-                _report(WARNING, repo, "not a repository")
+                _report(_WARNING, repo, "not a repository")
                 continue
 
             if not pyproject_toml.is_file():
-                _report(WARNING, repo, "missing pyproject.toml")
+                _report(_WARNING, repo, "missing pyproject.toml")
                 continue
 
             temp_repo = temp / repo.name
@@ -168,7 +168,7 @@ def main() -> int:
             metadata.setentry(repo)
             defaults.update(metadata)
             config.write_text(_json.dumps(defaults), encoding="utf-8")
-            temp_git_dir = temp_repo / GIT_DIR
+            temp_git_dir = temp_repo / _GIT_DIR
             with _ChDir(temp_repo):
                 git.stash(file=_os.devnull)
 
@@ -185,10 +185,10 @@ def main() -> int:
             if temp_git_dir.is_dir():
                 _shutil.rmtree(temp_git_dir)
 
-            _shutil.copytree(archived_repo / GIT_DIR, temp_git_dir)
+            _shutil.copytree(archived_repo / _GIT_DIR, temp_git_dir)
             _shutil.rmtree(repo)
             _shutil.move(temp_repo, repo)
 
-            _report(INFO, repo, "success")
+            _report(_INFO, repo, "success")
 
     return 0
