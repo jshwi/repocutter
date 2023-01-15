@@ -16,6 +16,7 @@ FixtureWritePyprojectToml = t.Callable[
     [Path, str, str, t.Tuple[str, ...], str], None
 ]
 FixtureMockCookiecutter = t.Callable[[t.Callable[..., None]], None]
+FixtureMockTemporaryDirectory = t.Callable[..., None]
 
 name = VarSeq("name")
 description = VarSeq("description")

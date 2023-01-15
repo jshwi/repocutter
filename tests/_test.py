@@ -19,6 +19,7 @@ from . import (
     FixtureMain,
     FixtureMakeTree,
     FixtureMockCookiecutter,
+    FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
     description,
     name,
@@ -110,6 +111,7 @@ def test_main_already_cached(
     mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
     write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_temporary_directory: FixtureMockTemporaryDirectory,
 ) -> None:
     """Test ``repocutter.main`` when the same repo is already saved.
 
@@ -122,10 +124,14 @@ def test_main_already_cached(
     :param make_tree: Make a directory and it's contents.
     :param write_pyproject_toml: Write pyproject.toml file with test
         attributes.
+    :param mock_temporary_directory: Mock
+        ``tempfile.TemporaryDirectory``.
     """
+    temp_dir = tmp_path / "tmp"
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
+    mock_temporary_directory(temp_dir)
     cached = (
         tmp_path
         / ".cache"
@@ -135,7 +141,7 @@ def test_main_already_cached(
     cached.mkdir(parents=True)
     make_tree(cached, {GIT_DIR: GIT_TREE})
     mock_cookiecutter(
-        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}})
+        lambda *_, **__: make_tree(temp_dir, {"repo": {GIT_DIR: GIT_TREE}})
     )
     main(cookiecutter_package, repo)
 
@@ -171,3 +177,37 @@ def test_main_entry_point(
     main(cookiecutter_package, repo)
     assert mock_json.dumped["include_entry_point"] == "y"
     assert checksumdir.dirhash(cookiecutter_package) == checksum
+
+
+def test_main_ctrl_c(
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
+) -> None:
+    """Test ``repocutter.main`` with SIGINT.
+
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    """
+
+    def _sigint(*_: object, **__: object) -> None:
+        raise KeyboardInterrupt
+
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    template_checksum = checksumdir.dirhash(cookiecutter_package)
+    repo_checksum = checksumdir.dirhash(repo)
+    mock_cookiecutter(_sigint)
+    with pytest.raises(KeyboardInterrupt):
+        main(cookiecutter_package, repo)
+
+    assert checksumdir.dirhash(cookiecutter_package) == template_checksum
+    assert checksumdir.dirhash(repo) == repo_checksum

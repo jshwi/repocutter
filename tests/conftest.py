@@ -17,10 +17,11 @@ from . import (
     FixtureMain,
     FixtureMakeTree,
     FixtureMockCookiecutter,
+    FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
 )
 from ._templates import COOKIECUTTER_JSON
-from ._utils import Git, MockJson
+from ._utils import Git, MockJson, MockTemporaryDirectory
 
 
 @pytest.fixture(name="make_tree")
@@ -187,3 +188,22 @@ def fixture_mock_cookiecutter(
         monkeypatch.setattr("repocutter._main._cookiecutter", action)
 
     return _mock_cookiecutter
+
+
+@pytest.fixture(name="mock_temporary_directory")
+def fixture_mock_temporary_dir(
+    monkeypatch: pytest.MonkeyPatch,
+) -> FixtureMockTemporaryDirectory:
+    """Patch ``TemporaryDirectory`` to return test /tmp/<unique> dir.
+
+    :param monkeypatch: Mock patch environment and attributes.
+    :return: Function for using this fixture.
+    """
+
+    def _mock_temporary_dir(*temp_dirs: Path) -> None:
+        monkeypatch.setattr(
+            "repocutter._main._TemporaryDirectory",
+            MockTemporaryDirectory(*temp_dirs).open,
+        )
+
+    return _mock_temporary_dir

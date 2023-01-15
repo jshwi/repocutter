@@ -5,7 +5,10 @@ tests._utils
 # pylint: disable=too-few-public-methods
 from __future__ import annotations
 
+import contextlib
 import json
+import typing as t
+from pathlib import Path
 
 
 class MockJson:
@@ -43,3 +46,24 @@ class Git:
 
     def stash(self, **_: object) -> None:
         """Disable this method."""
+
+
+class MockTemporaryDirectory:
+    """Mock ``tempfile.TemporaryDirectory``.
+
+    :param temp_dirs: Paths to mock ``tempfile.TemporaryDirectory``
+        with.
+    """
+
+    def __init__(self, *temp_dirs: Path) -> None:
+        self._temp_dirs = list(temp_dirs)
+
+    @contextlib.contextmanager
+    def open(self) -> t.Generator[str, None, None]:
+        """Mock dir returned from ``TemporaryDirectory`` constructor.
+
+        :return: Generator yielding self.
+        """
+        temp_dir = self._temp_dirs.pop(0)
+        temp_dir.mkdir()
+        yield str(temp_dir)

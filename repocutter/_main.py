@@ -6,11 +6,13 @@ Contains package entry point.
 """
 from __future__ import annotations
 
+import contextlib as _contextlib
 import json as _json
 import os as _os
 import shutil as _shutil
 import typing as _t
 from pathlib import Path as _Path
+from tempfile import TemporaryDirectory as _TemporaryDirectory
 from types import TracebackType as _TracebackType
 
 import appdirs as _appdirs
@@ -92,23 +94,6 @@ class _MetaData(_t.Dict[str, str]):
         self["include_entry_point"] = "y" if main_file.is_file() else "n"
 
 
-class _ConfigBuffer:
-    def __init__(self, config: _Path) -> None:
-        self._config = config
-        self._buffer = config.read_text(encoding="utf-8")
-
-    def __enter__(self) -> _ConfigBuffer:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: _TracebackType | None,
-    ):
-        self._config.write_text(self._buffer, encoding="utf-8")
-
-
 class _ChDir:
     def __init__(self, path: _Path) -> None:
         self._cwd = _Path.cwd()
@@ -126,6 +111,16 @@ class _ChDir:
         _os.chdir(self._cwd)
 
 
+@_contextlib.contextmanager
+def temporary_directory() -> _t.Generator[_Path, None, None]:
+    """Instantiate a temporary directory as a ``Path`` object.
+
+    :return: Yield a ``Path`` object.
+    """
+    with _TemporaryDirectory() as tempdir:
+        yield _Path(tempdir)
+
+
 def main() -> int:
     """Main function for package.
 
@@ -133,16 +128,17 @@ def main() -> int:
     """
     parser = _Parser()
     cache_dir = _Path(_appdirs.user_cache_dir(NAME))
-    config = parser.args.path / "cookiecutter.json"
-    defaults = _json.loads(config.read_text(encoding="utf-8"))
     git = _Git()
-    with _ConfigBuffer(config):
+    with temporary_directory() as temp:
+        template = temp / parser.args.path.name
+        _shutil.copytree(parser.args.path, template)
+        config = template / "cookiecutter.json"
+        defaults = _json.loads(config.read_text(encoding="utf-8"))
         for repo in parser.args.repos:
+            temp_repo = temp / repo.name
+            _shutil.copytree(repo, temp_repo)
             pyproject_toml = repo / "pyproject.toml"
             git_dir = repo / GIT_DIR
-            with _ChDir(repo):
-                git.stash(file=_os.devnull)
-
             archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"
             archived_repo = cache_dir / archive_name
             metadata = _MetaData(
@@ -151,18 +147,25 @@ def main() -> int:
             metadata.setentry(repo)
             defaults.update(metadata)
             config.write_text(_json.dumps(defaults), encoding="utf-8")
+            temp_git_dir = temp_repo / GIT_DIR
+            with _ChDir(temp_repo):
+                git.stash(file=_os.devnull)
+
             if archived_repo.is_dir():
                 _shutil.rmtree(archived_repo)
 
-            _shutil.move(str(repo), archived_repo)
+            _shutil.move(str(temp_repo), archived_repo)
             _cookiecutter(
-                template=str(parser.args.path),
+                template=str(template),
+                output_dir=str(temp),
                 no_input=True,
                 accept_hooks=parser.args.accept_hooks,
             )
-            if git_dir.is_dir():
-                _shutil.rmtree(git_dir)
+            if temp_git_dir.is_dir():
+                _shutil.rmtree(temp_git_dir)
 
-            _shutil.copytree(archived_repo / GIT_DIR, git_dir)
+            _shutil.copytree(archived_repo / GIT_DIR, temp_git_dir)
+            _shutil.rmtree(repo)
+            _shutil.move(temp_repo, repo)
 
     return 0
