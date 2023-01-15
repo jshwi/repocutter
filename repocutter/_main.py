@@ -24,6 +24,7 @@ from object_colors import Color as _Color
 from ._version import __version__
 
 NAME = __name__.split(".", maxsplit=1)[0]
+GIT_DIR = ".git"
 
 _color = _Color()
 
@@ -138,7 +139,7 @@ def main() -> int:
     with _ConfigBuffer(config):
         for repo in parser.args.repos:
             pyproject_toml = repo / "pyproject.toml"
-            git_dir = repo / ".git"
+            git_dir = repo / GIT_DIR
             with _ChDir(repo):
                 git.stash(file=_os.devnull)
 
@@ -162,6 +163,6 @@ def main() -> int:
             if git_dir.is_dir():
                 _shutil.rmtree(git_dir)
 
-            _shutil.copytree(archived_repo / ".git", git_dir)
+            _shutil.copytree(archived_repo / GIT_DIR, git_dir)
 
     return 0
