@@ -2,6 +2,8 @@
 tests._test
 ===========
 """
+import shutil
+
 # pylint: disable=too-many-arguments
 from pathlib import Path
 
@@ -217,3 +219,23 @@ def test_main_ctrl_c(
 
     assert checksumdir.dirhash(cookiecutter_package) == template_checksum
     assert checksumdir.dirhash(repo) == repo_checksum
+
+
+def test_main_no_dir(
+    capsys: pytest.CaptureFixture,
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+) -> None:
+    """Test ``repocutter.main`` skipping of non-existing dir.
+
+    :param capsys: Capture sys out and err.
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    """
+    shutil.rmtree(repo)
+    main(cookiecutter_package, repo)
+    std = capsys.readouterr()
+    assert "does not exist" in std.out

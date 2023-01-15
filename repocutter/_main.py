@@ -144,10 +144,14 @@ def main() -> int:
         config = template / "cookiecutter.json"
         defaults = _json.loads(config.read_text(encoding="utf-8"))
         for repo in parser.args.repos:
-            temp_repo = temp / repo.name
-            _shutil.copytree(repo, temp_repo)
             pyproject_toml = repo / "pyproject.toml"
             git_dir = repo / GIT_DIR
+            if not repo.is_dir():
+                _report(WARNING, repo, "does not exist")
+                continue
+
+            temp_repo = temp / repo.name
+            _shutil.copytree(repo, temp_repo)
             archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"
             archived_repo = cache_dir / archive_name
             metadata = _MetaData(
