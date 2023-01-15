@@ -15,6 +15,7 @@ FixtureGitInit = t.Callable[[Path], None]
 FixtureWritePyprojectToml = t.Callable[
     [Path, str, str, t.Tuple[str, ...], str], None
 ]
+FixtureMockCookiecutter = t.Callable[[t.Callable[..., None]], None]
 
 name = VarSeq("name")
 description = VarSeq("description")

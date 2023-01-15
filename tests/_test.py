@@ -18,6 +18,7 @@ from . import (
     VERSION,
     FixtureMain,
     FixtureMakeTree,
+    FixtureMockCookiecutter,
     FixtureWritePyprojectToml,
     description,
     name,
@@ -39,6 +40,7 @@ def test_main_exit_status(
     repo: Path,
     cookiecutter_package: Path,
     write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
     mock_json: MockJson,
 ) -> None:
     """Test ``repocutter.main``.
@@ -53,12 +55,14 @@ def test_main_exit_status(
         ``cookiecutter`` template package.
     :param write_pyproject_toml: Write pyproject.toml file with test
         attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param mock_json: Mock ``json`` module.
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
+    mock_cookiecutter(lambda *_, **__: None)
     assert main(cookiecutter_package, repo) == 0
     assert mock_json.dumped["project_name"] == name[0]
     assert mock_json.dumped["project_description"] == description[0]
@@ -70,21 +74,21 @@ def test_main_exit_status(
 
 def test_main_post_hook_git(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
     write_pyproject_toml: FixtureWritePyprojectToml,
 ) -> None:
     """Test ``repocutter.main`` with a post gen hook that inits repo.
 
     :param tmp_path: Create and return temporary directory.
-    :param monkeypatch: Mock patch environment and attributes.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param make_tree: Make a directory and it's contents.
     :param write_pyproject_toml: Write pyproject.toml file with test
         attributes.
@@ -92,30 +96,29 @@ def test_main_post_hook_git(
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
-    monkeypatch.setattr(
-        "repocutter._main._cookiecutter",
-        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}}),
+    mock_cookiecutter(
+        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}})
     )
     main(cookiecutter_package, repo)
 
 
 def test_main_already_cached(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
     write_pyproject_toml: FixtureWritePyprojectToml,
 ) -> None:
     """Test ``repocutter.main`` when the same repo is already saved.
 
     :param tmp_path: Create and return temporary directory.
-    :param monkeypatch: Mock patch environment and attributes.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param make_tree: Make a directory and it's contents.
     :param write_pyproject_toml: Write pyproject.toml file with test
         attributes.
@@ -131,9 +134,8 @@ def test_main_already_cached(
     )
     cached.mkdir(parents=True)
     make_tree(cached, {GIT_DIR: GIT_TREE})
-    monkeypatch.setattr(
-        "repocutter._main._cookiecutter",
-        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}}),
+    mock_cookiecutter(
+        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}})
     )
     main(cookiecutter_package, repo)
 
@@ -143,6 +145,7 @@ def test_main_entry_point(
     repo: Path,
     cookiecutter_package: Path,
     write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
     mock_json: MockJson,
 ) -> None:
     """Test ``repocutter.main`` with entry point.
@@ -153,6 +156,7 @@ def test_main_entry_point(
         ``cookiecutter`` template package.
     :param write_pyproject_toml: Write pyproject.toml file with test
         attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param mock_json: Mock ``json`` module.
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
@@ -163,6 +167,7 @@ def test_main_entry_point(
     package.mkdir()
     entry_point = package / "__main__.py"
     entry_point.touch()
+    mock_cookiecutter(lambda *_, **__: None)
     main(cookiecutter_package, repo)
     assert mock_json.dumped["include_entry_point"] == "y"
     assert checksumdir.dirhash(cookiecutter_package) == checksum

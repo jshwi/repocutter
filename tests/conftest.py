@@ -12,7 +12,13 @@ import tomli_w
 
 import repocutter
 
-from . import GIT_TREE, FixtureMain, FixtureMakeTree, FixtureWritePyprojectToml
+from . import (
+    GIT_TREE,
+    FixtureMain,
+    FixtureMakeTree,
+    FixtureMockCookiecutter,
+    FixtureWritePyprojectToml,
+)
 from ._templates import COOKIECUTTER_JSON
 from ._utils import Git, MockJson
 
@@ -165,3 +171,19 @@ def fixture_mock_json(monkeypatch: pytest.MonkeyPatch) -> MockJson:
     mock_json = MockJson()
     monkeypatch.setattr("repocutter._main._json", mock_json)
     return mock_json
+
+
+@pytest.fixture(name="mock_cookiecutter")
+def fixture_mock_cookiecutter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> FixtureMockCookiecutter:
+    """Mock ``cookiecutter`` module.
+
+    :param monkeypatch: Mock patch environment and attributes.
+    :return: Function for using this fixture.
+    """
+
+    def _mock_cookiecutter(action: t.Callable[..., None]):
+        monkeypatch.setattr("repocutter._main._cookiecutter", action)
+
+    return _mock_cookiecutter
