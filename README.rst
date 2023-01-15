@@ -57,7 +57,7 @@ Usage
     Checkout repos to current cookiecutter config
 
     positional arguments:
-      PATH                pat,h to cookiecutter template dir
+      PATH                path to cookiecutter template dir
       REPOS               repos to run cookiecutter over
 
     optional arguments:

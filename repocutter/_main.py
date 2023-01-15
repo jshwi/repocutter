@@ -53,7 +53,7 @@ class _Parser(_ArgumentParser):
             action="store",
             type=_Path,
             metavar="PATH",
-            help="pat,h to cookiecutter template dir",
+            help="path to cookiecutter template dir",
         )
         self.add_argument(
             "repos",
