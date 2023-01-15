@@ -65,3 +65,55 @@ Usage
       -v, --version       show program's version number and exit
       -a, --accept-hooks  accept pre/post hooks
       -c, --gc            clean up backups from previous runs
+
+Configuration
+-------------
+
+Currently only written for a configuration exactly like below
+
+Technically a repo would not need to be a `poetry <https://github.com/python-poetry/poetry>`_ project if the below section exists within its pyproject.toml file
+
+This is the only use case at this time (If there are any other configurations you would like added please leave an `issue <https://github.com/jshwi/repocutter/issues>`_)
+
+Each repository's pyproject.toml file will be parsed for data to recreate its working tree
+
+A ``poetry`` section in the project's pyproject.toml file that looks like the following...
+
+.. code-block:: toml
+
+    [tool.poetry]
+    description = "Checkout repos to current cookiecutter config"
+    keywords = [
+      "config",
+      "cookiecutter",
+      "jinja2",
+      "repo",
+      "template"
+    ]
+    name = "repocutter"
+    version = "0.2.0"
+
+...will temporarily write to the ``cookiecutter`` project's cookiecutter.json file until the repo is created
+
+.. code-block:: json
+
+    {
+      "project_name": "repocutter",
+      "project_version": "0.2.0",
+      "project_description": "Checkout repos to current cookiecutter config",
+      "project_keywords": "config,cookiecutter,jinja2,repo,template",
+    }
+
+The above configuration will reduce the diff, but it will still work if your config is not exactly the same
+
+Why?
+----
+As time goes on, and you use ``cookiecutter`` for new projects, you will make more and more changes to your ``cookiecutter`` repo
+
+You will find these new project layouts are preferable to your older, more outdated, projects
+
+If you have a project layout configured with ``cookiecutter`` then it's likely you will want this layout for all your projects
+
+Configuring your existing projects manually is even more tedious than configuring a new project manually, especially if you have a lot of them
+
+By checking out your projects to your configured ``cookiecutter`` layout, you can use whatever diff tool you use to rollback any undesired changes
