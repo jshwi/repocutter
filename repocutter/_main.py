@@ -27,6 +27,9 @@ from ._version import __version__
 
 NAME = __name__.split(".", maxsplit=1)[0]
 GIT_DIR = ".git"
+INFO = 20
+WARNING = 30
+ERROR = 40
 
 _color = _Color()
 
@@ -121,6 +124,12 @@ def temporary_directory() -> _t.Generator[_Path, None, None]:
         yield _Path(tempdir)
 
 
+def _report(level: int, repo: _Path, message: str) -> None:
+    ident = (15 - len(str(repo))) * " "
+    color = {INFO: _color.green, WARNING: _color.yellow, ERROR: _color.red}
+    print(f"[{color[level].get(repo)}{ident}] {message}")
+
+
 def main() -> int:
     """Main function for package.
 
@@ -167,5 +176,7 @@ def main() -> int:
             _shutil.copytree(archived_repo / GIT_DIR, temp_git_dir)
             _shutil.rmtree(repo)
             _shutil.move(temp_repo, repo)
+
+            _report(INFO, repo, "success")
 
     return 0

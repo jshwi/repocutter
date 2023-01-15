@@ -37,6 +37,7 @@ def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_main_exit_status(
+    capsys: pytest.CaptureFixture,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
@@ -50,6 +51,9 @@ def test_main_exit_status(
 
     Test config correctly written.
 
+    Test success output.
+
+    :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
@@ -71,6 +75,8 @@ def test_main_exit_status(
     assert mock_json.dumped["project_version"] == VERSION
     assert mock_json.dumped["include_entry_point"] == "n"
     assert checksumdir.dirhash(cookiecutter_package) == checksum
+    std = capsys.readouterr()
+    assert "success" in std.out
 
 
 def test_main_post_hook_git(
