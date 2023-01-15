@@ -150,6 +150,10 @@ def main() -> int:
                 _report(WARNING, repo, "does not exist")
                 continue
 
+            if not git_dir.is_dir():
+                _report(WARNING, repo, "not a repository")
+                continue
+
             temp_repo = temp / repo.name
             _shutil.copytree(repo, temp_repo)
             archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add temporary staging environment
 
 ### Changed
+- Continue if path provided is not a repository
 - Continue if non-existing repo path provided
 
 [0.1.0](https://github.com/jshwi/repocutter/releases/tag/v0.1.0) - 2023-01-14

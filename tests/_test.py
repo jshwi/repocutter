@@ -239,3 +239,23 @@ def test_main_no_dir(
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "does not exist" in std.out
+
+
+def test_main_no_repo(
+    capsys: pytest.CaptureFixture,
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+) -> None:
+    """Test ``repocutter.main`` skipping of non-repository.
+
+    :param capsys: Capture sys out and err.
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    """
+    shutil.rmtree(repo / ".git")
+    main(cookiecutter_package, repo)
+    std = capsys.readouterr()
+    assert "not a repository" in std.out
