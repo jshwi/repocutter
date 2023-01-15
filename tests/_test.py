@@ -35,7 +35,6 @@ def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_main_exit_status(
-    monkeypatch: pytest.MonkeyPatch,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
@@ -48,7 +47,6 @@ def test_main_exit_status(
 
     Test config correctly written.
 
-    :param monkeypatch: Mock patch environment and attributes.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
@@ -61,7 +59,6 @@ def test_main_exit_status(
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
-    monkeypatch.setattr("repocutter._main._json", mock_json)
     assert main(cookiecutter_package, repo) == 0
     assert mock_json.dumped["project_name"] == name[0]
     assert mock_json.dumped["project_description"] == description[0]
@@ -142,7 +139,6 @@ def test_main_already_cached(
 
 
 def test_main_entry_point(
-    monkeypatch: pytest.MonkeyPatch,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
@@ -151,7 +147,6 @@ def test_main_entry_point(
 ) -> None:
     """Test ``repocutter.main`` with entry point.
 
-    :param monkeypatch: Mock patch environment and attributes.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
@@ -164,7 +159,6 @@ def test_main_entry_point(
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
-    monkeypatch.setattr("repocutter._main._json", mock_json)
     package = repo / name[0]
     package.mkdir()
     entry_point = package / "__main__.py"

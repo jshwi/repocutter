@@ -156,9 +156,12 @@ def fixture_write_pyproject_toml() -> FixtureWritePyprojectToml:
 
 
 @pytest.fixture(name="mock_json")
-def fixture_mock_json() -> MockJson:
+def fixture_mock_json(monkeypatch: pytest.MonkeyPatch) -> MockJson:
     """Mock ``json`` module.
 
+    :param monkeypatch: Mock patch environment and attributes.
     :return: Class behaving as module to capture function actions.
     """
-    return MockJson()
+    mock_json = MockJson()
+    monkeypatch.setattr("repocutter._main._json", mock_json)
+    return mock_json
