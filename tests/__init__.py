@@ -7,7 +7,7 @@ Test package for ``repocutter``.
 import typing as t
 from pathlib import Path
 
-from templatest.utils import VarSeq
+from templatest.utils import VarPrefix, VarSeq
 
 FixtureMain = t.Callable[..., int]
 FixtureMakeTree = t.Callable[[Path, t.Dict[t.Any, t.Any]], None]
@@ -20,6 +20,7 @@ FixtureMockTemporaryDirectory = t.Callable[..., None]
 
 name = VarSeq("name")
 description = VarSeq("description")
+flags = VarPrefix("--", slug="-")
 
 VERSION = "0.1.0"
 KEYWORDS = ("one", "two", "three", "four", "five")

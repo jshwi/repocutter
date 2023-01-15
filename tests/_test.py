@@ -24,6 +24,7 @@ from . import (
     FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
     description,
+    flags,
     name,
 )
 from ._utils import MockJson
@@ -278,3 +279,35 @@ def test_main_no_pyproject(
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "missing pyproject.toml" in std.out
+
+
+def test_main_gc(
+    capsys: pytest.CaptureFixture,
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
+) -> None:
+    """Test ``repocutter.main`` with ``-c/--gc``.
+
+    :param capsys: Capture sys out and err.
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    """
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    mock_cookiecutter(lambda *_, **__: None)
+
+    # run once to actually create the cache dir
+    main(cookiecutter_package, repo)
+
+    main(cookiecutter_package, repo, flags.gc)
+    std = capsys.readouterr()
+    assert "cleaning" in std.out

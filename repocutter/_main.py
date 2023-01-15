@@ -68,6 +68,12 @@ class _Parser(_ArgumentParser):
             action="store_true",
             help="accept pre/post hooks",
         )
+        self.add_argument(
+            "-c",
+            "--gc",
+            action="store_true",
+            help="clean up backups from previous runs",
+        )
 
 
 class _MetaData(_t.Dict[str, str]):
@@ -130,6 +136,13 @@ def _report(level: int, repo: _Path, message: str) -> None:
     print(f"[{color[level].get(repo)}{ident}] {message}")
 
 
+def _garbage_collection(cache_dir: _Path) -> None:
+    if cache_dir.is_dir():
+        _report(_INFO, cache_dir, "cleaning")
+        for path in cache_dir.iterdir():
+            _shutil.rmtree(path)
+
+
 def main() -> int:
     """Main function for package.
 
@@ -138,6 +151,9 @@ def main() -> int:
     parser = _Parser()
     cache_dir = _Path(_appdirs.user_cache_dir(_NAME))
     git = _Git()
+    if parser.args.gc:
+        _garbage_collection(cache_dir)
+
     with temporary_directory() as temp:
         template = temp / parser.args.path.name
         _shutil.copytree(parser.args.path, template)

@@ -37,7 +37,7 @@ repocutter
 Checkout repos to current cookiecutter config
 ---------------------------------------------
 
-Checkout one or more repos to current ``cookiecutter`` config
+Checkout one or more repos to current `cookiecutter <https://github.com/cookiecutter/cookiecutter>`_ config
 
 This will make changes to local repositories, hopefully preserving their history
 
@@ -52,7 +52,7 @@ Usage
 
 .. code-block:: console
 
-    usage: repocutter [-h] [-v] [-a] PATH [REPOS [REPOS ...]]
+    usage: repocutter [-h] [-v] [-a] [-c] PATH [REPOS [REPOS ...]]
 
     Checkout repos to current cookiecutter config
 
@@ -64,3 +64,4 @@ Usage
       -h, --help          show this help message and exit
       -v, --version       show program's version number and exit
       -a, --accept-hooks  accept pre/post hooks
+      -c, --gc            clean up backups from previous runs
