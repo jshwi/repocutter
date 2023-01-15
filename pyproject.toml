@@ -67,7 +67,7 @@ maintainers = [
 name = "repocutter"
 readme = "README.rst"
 repository = "https://github.com/jshwi/repocutter"
-version = "0.2.0"
+version = "0.3.0"
 
 [tool.poetry.dependencies]
 appdirs = "^1.4.4"
