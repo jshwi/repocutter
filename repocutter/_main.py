@@ -154,6 +154,10 @@ def main() -> int:
                 _report(WARNING, repo, "not a repository")
                 continue
 
+            if not pyproject_toml.is_file():
+                _report(WARNING, repo, "missing pyproject.toml")
+                continue
+
             temp_repo = temp / repo.name
             _shutil.copytree(repo, temp_repo)
             archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"

@@ -259,3 +259,22 @@ def test_main_no_repo(
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "not a repository" in std.out
+
+
+def test_main_no_pyproject(
+    capsys: pytest.CaptureFixture,
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+) -> None:
+    """Test ``repocutter.main`` skipping of repos without pyproject.
+
+    :param capsys: Capture sys out and err.
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    """
+    main(cookiecutter_package, repo)
+    std = capsys.readouterr()
+    assert "missing pyproject.toml" in std.out

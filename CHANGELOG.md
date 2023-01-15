@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add temporary staging environment
 
 ### Changed
+- Continue if repo provided does not have a pyproject.toml file
 - Continue if path provided is not a repository
 - Continue if non-existing repo path provided
 
