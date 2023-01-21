@@ -3,8 +3,11 @@ tests._test
 ===========
 """
 # pylint: disable=too-many-arguments,protected-access
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
+from subprocess import CalledProcessError
 
 import checksumdir
 import pytest
@@ -24,7 +27,9 @@ from . import (
     FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
     description,
+    file,
     flags,
+    folder,
     name,
 )
 from ._utils import MockJson
@@ -310,3 +315,141 @@ def test_main_gc(
     main(cookiecutter_package, repo, flags.gc)
     std = capsys.readouterr()
     assert "cleaning" in std.out
+
+
+def test_main_avoid_pre_commit_unstaged_error(
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    make_tree: FixtureMakeTree,
+    mock_temporary_directory: FixtureMockTemporaryDirectory,
+) -> None:
+    """Test ``repocutter.main`` and checking out with pre-commit config.
+
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param make_tree: Make a directory and it's contents.
+    :param mock_temporary_directory: Mock
+        ``tempfile.TemporaryDirectory``.
+    """
+    temp_dir = repo.parent / TMP
+    mock_temporary_directory(temp_dir)
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    working_tree = {
+        repo.name: {".pre-commit-config.yaml": None, file[1]: None}
+    }
+    make_tree(repo.parent, working_tree)
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    main(cookiecutter_package, repo, flags.ignore, file[1])
+    assert "add .pre-commit-config.yaml" in repocutter._main._git.called
+    assert "reset .pre-commit-config.yaml" in repocutter._main._git.called
+
+
+def test_main_no_head(
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    make_tree: FixtureMakeTree,
+    mock_temporary_directory: FixtureMockTemporaryDirectory,
+) -> None:
+    """Test ``repocutter.main`` when no HEAD to checkout.
+
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param make_tree: Make a directory and it's contents.
+    :param mock_temporary_directory: Mock
+        ``tempfile.TemporaryDirectory``.
+    """
+    called = []
+
+    def _checkout(*args: str, **__: object) -> None:
+        called.append(" ".join(str(i) for i in args))
+        raise CalledProcessError(1, "checkout")
+
+    # already monkey-patched
+    repocutter._main._git.checkout = _checkout
+
+    temp_dir = repo.parent / TMP
+    mock_temporary_directory(temp_dir)
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    working_tree = {repo.name: {".pre-commit-config.yaml": None}}
+    make_tree(repo.parent, working_tree)
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    main(cookiecutter_package, repo, flags.ignore, file[1])
+    assert f"HEAD -- {file[1]}" in called
+
+
+@pytest.mark.parametrize(
+    "path,tree,expected",
+    [
+        (file[1], {file[1]: None}, file[1]),
+        (
+            folder[1],
+            {folder[1]: {file[1]: None, file[2]: None, file[3]: None}},
+            folder[1],
+        ),
+        ("{{cookiecutter.project_name}}", {name[1]: {file[1]: None}}, name[1]),
+        (
+            "{{ cookiecutter.project_name }}",
+            {name[1]: {file[1]: None}},
+            name[1],
+        ),
+    ],
+    ids=["file", "dir", "interpolate", "interpolate_space"],
+)
+def test_main_ignore_path(
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    make_tree: FixtureMakeTree,
+    mock_temporary_directory: FixtureMockTemporaryDirectory,
+    path: str,
+    tree: dict[str, None | dict[str, dict[str, None]]],
+    expected: str,
+) -> None:
+    """Test ``repocutter.main`` and ``-i/--ignore`` argument.
+
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param make_tree: Make a directory and it's contents.
+    :param mock_temporary_directory: Mock
+        ``tempfile.TemporaryDirectory``.
+    :param path: Path to ignore.
+    :param tree: Tree to mock.
+    :param expected: Expected result.
+    """
+    temp_dir = repo.parent / TMP
+    mock_temporary_directory(temp_dir)
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[1], description[1], KEYWORDS, VERSION
+    )
+    working_tree = {repo.name: tree}
+    make_tree(repo.parent, working_tree)
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    main(cookiecutter_package, repo, flags.ignore, path)
+    assert f"checkout HEAD -- {expected}" in repocutter._main._git.called

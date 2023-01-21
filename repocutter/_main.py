@@ -9,9 +9,12 @@ from __future__ import annotations
 import contextlib as _contextlib
 import json as _json
 import os as _os
+import re as _re
 import shutil as _shutil
 import typing as _t
+from argparse import HelpFormatter as _HelpFormatter
 from pathlib import Path as _Path
+from subprocess import CalledProcessError as _CalledProcessError
 from tempfile import TemporaryDirectory as _TemporaryDirectory
 from types import TracebackType as _TracebackType
 
@@ -30,6 +33,7 @@ _GIT_DIR = ".git"
 _INFO = 20
 _WARNING = 30
 _ERROR = 40
+_PRE_COMMIT_CONFIG = ".pre-commit-config.yaml"
 
 _git = _Git()
 _color = _Color()
@@ -43,10 +47,14 @@ class _Parser(_ArgumentParser):
             __version__,
             prog=_color.cyan.get(_NAME),
             description="Checkout repos to current cookiecutter config",
+            formatter_class=lambda prog: _HelpFormatter(
+                prog, max_help_position=45
+            ),
         )
         self._add_arguments()
         self.args = self.parse_args()
         self.args.repos = tuple(_Path(i) for i in self.args.repos)
+        self.args.ignore = tuple(_Path(i) for i in self.args.ignore)
 
     def _add_arguments(self) -> None:
         self.add_argument(
@@ -74,6 +82,16 @@ class _Parser(_ArgumentParser):
             "--gc",
             action="store_true",
             help="clean up backups from previous runs",
+        )
+        self.add_list_argument(
+            "-i",
+            "--ignore",
+            action="store",
+            metavar="LIST",
+            help=(
+                "comma separated list of paths to ignore, cookiecutter vars"
+                " are allowed"
+            ),
         )
 
 
@@ -144,6 +162,40 @@ def _garbage_collection(cache_dir: _Path) -> None:
             _shutil.rmtree(path)
 
 
+@_contextlib.contextmanager
+def _stage_pre_commit(repo: _Path) -> _t.Generator[None, None, None]:
+    path = repo / _PRE_COMMIT_CONFIG
+    if path.is_file():
+        _git.add(path.name)
+
+    yield
+    _git.reset(path.name, file=_os.devnull)
+
+
+def _revert_ignored(
+    paths: tuple[_Path, ...], repo: _Path, metadata: _MetaData
+) -> None:
+    with _ChDir(repo):
+        with _stage_pre_commit(repo):
+            for path in paths:
+                rgx = _re.match(r"{{\s?cookiecutter\.(.[^ ]*)\s?}}", str(path))
+                if rgx:
+                    new_path = metadata.get(rgx.group(1))
+                    if new_path is not None:
+                        path = _Path(new_path)
+
+                if path.exists():
+                    if path.is_dir():
+                        _shutil.rmtree(path)
+                    else:
+                        _os.remove(path)
+
+                try:
+                    _git.checkout("HEAD", "--", str(path), file=_os.devnull)
+                except _CalledProcessError:
+                    pass
+
+
 def main() -> int:
     """Main function for package.
 
@@ -202,6 +254,7 @@ def main() -> int:
                 _shutil.rmtree(temp_git_dir)
 
             _shutil.copytree(archived_repo / _GIT_DIR, temp_git_dir)
+            _revert_ignored(parser.args.ignore, temp_repo, metadata)
             _shutil.rmtree(repo)
             _shutil.move(temp_repo, repo)
 

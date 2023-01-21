@@ -21,6 +21,8 @@ FixtureMockTemporaryDirectory = t.Callable[..., None]
 name = VarSeq("name")
 description = VarSeq("description")
 flags = VarPrefix("--", slug="-")
+file = VarSeq("file")
+folder = VarSeq("dir")
 
 VERSION = "0.1.0"
 KEYWORDS = ("one", "two", "three", "four", "five")
