@@ -83,7 +83,6 @@ def test_main_exit_status(
 
 
 def test_main_post_hook_git(
-    tmp_path: Path,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
@@ -93,7 +92,6 @@ def test_main_post_hook_git(
 ) -> None:
     """Test ``repocutter.main`` with a post gen hook that inits repo.
 
-    :param tmp_path: Create and return temporary directory.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
@@ -107,13 +105,14 @@ def test_main_post_hook_git(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
     mock_cookiecutter(
-        lambda *_, **__: make_tree(tmp_path, {"repo": {GIT_DIR: GIT_TREE}})
+        lambda *_, **__: make_tree(
+            repo.parent, {repo.name: {GIT_DIR: GIT_TREE}}
+        )
     )
     main(cookiecutter_package, repo)
 
 
 def test_main_already_cached(
-    tmp_path: Path,
     main: FixtureMain,
     repo: Path,
     cookiecutter_package: Path,
@@ -124,7 +123,6 @@ def test_main_already_cached(
 ) -> None:
     """Test ``repocutter.main`` when the same repo is already saved.
 
-    :param tmp_path: Create and return temporary directory.
     :param main: Mock ``main`` function.
     :param repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
@@ -136,13 +134,13 @@ def test_main_already_cached(
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
     """
-    temp_dir = tmp_path / "tmp"
+    temp_dir = repo.parent / "tmp"
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
     mock_temporary_directory(temp_dir)
     cached = (
-        tmp_path
+        repo.parent
         / ".cache"
         / repocutter.__name__
         / f"repo-{checksumdir.dirhash(repo / GIT_DIR)}"
@@ -150,7 +148,7 @@ def test_main_already_cached(
     cached.mkdir(parents=True)
     make_tree(cached, {GIT_DIR: GIT_TREE})
     mock_cookiecutter(
-        lambda *_, **__: make_tree(temp_dir, {"repo": {GIT_DIR: GIT_TREE}})
+        lambda *_, **__: make_tree(temp_dir, {repo.name: {GIT_DIR: GIT_TREE}})
     )
     main(cookiecutter_package, repo)
 
