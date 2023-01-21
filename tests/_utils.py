@@ -7,8 +7,11 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import typing as t
 from pathlib import Path
+
+from gitspy import Git as _Git
 
 
 class MockJson:
@@ -41,11 +44,21 @@ class MockJson:
         return json.loads(string)
 
 
-class Git:
+class Git(_Git):
     """Mock ``Git`` object."""
 
-    def stash(self, **_: object) -> None:
-        """Disable this method."""
+    def __init__(self) -> None:
+        super().__init__()
+        self._called: list[str] = []
+
+    def call(self, *args: str, **_: bool | str | os.PathLike) -> int:
+        self._called.append(" ".join(str(i) for i in args))
+        return 0
+
+    @property
+    def called(self) -> list[str]:
+        """Get git commands that were called."""
+        return self._called
 
 
 class MockTemporaryDirectory:

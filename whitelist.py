@@ -1,4 +1,5 @@
 FixtureGitInit  # unused variable (tests/__init__.py:14)
+_.call  # unused method (tests/_utils.py:54)
 exc_tb  # unused variable (repocutter/_main.py:119)
 exc_type  # unused variable (repocutter/_main.py:117)
 exc_val  # unused variable (repocutter/_main.py:118)

@@ -2,7 +2,7 @@
 tests._test
 ===========
 """
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,protected-access
 import shutil
 from pathlib import Path
 
@@ -79,6 +79,7 @@ def test_main_exit_status(
     assert checksumdir.dirhash(cookiecutter_package) == checksum
     std = capsys.readouterr()
     assert "success" in std.out
+    assert "stash" in repocutter._main._git.called
 
 
 def test_main_post_hook_git(
