@@ -2,9 +2,8 @@
 tests._test
 ===========
 """
-import shutil
-
 # pylint: disable=too-many-arguments
+import shutil
 from pathlib import Path
 
 import checksumdir
