@@ -16,6 +16,7 @@ from . import (
     GIT_TREE,
     KEYWORDS,
     PYPROJECT_TOML,
+    TMP,
     VERSION,
     FixtureMain,
     FixtureMakeTree,
@@ -134,7 +135,7 @@ def test_main_already_cached(
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
     """
-    temp_dir = repo.parent / "tmp"
+    temp_dir = repo.parent / TMP
     write_pyproject_toml(
         repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
     )
