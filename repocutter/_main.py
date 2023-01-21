@@ -31,6 +31,7 @@ _INFO = 20
 _WARNING = 30
 _ERROR = 40
 
+_git = _Git()
 _color = _Color()
 
 _color.populate_colors()
@@ -150,7 +151,6 @@ def main() -> int:
     """
     parser = _Parser()
     cache_dir = _Path(_appdirs.user_cache_dir(_NAME))
-    git = _Git()
     if parser.args.gc:
         _garbage_collection(cache_dir)
 
@@ -186,7 +186,7 @@ def main() -> int:
             config.write_text(_json.dumps(defaults), encoding="utf-8")
             temp_git_dir = temp_repo / _GIT_DIR
             with _ChDir(temp_repo):
-                git.stash(file=_os.devnull)
+                _git.stash(file=_os.devnull)
 
             if archived_repo.is_dir():
                 _shutil.rmtree(archived_repo)

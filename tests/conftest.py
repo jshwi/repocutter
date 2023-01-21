@@ -101,7 +101,7 @@ def fixture_environment(
     :param monkeypatch: Mock patch environment and attributes.
     :param tmp_path: Create and return temporary directory.
     """
-    monkeypatch.setattr("repocutter._main._Git", Git)
+    monkeypatch.setattr("repocutter._main._git", Git())
     monkeypatch.chdir(tmp_path)
 
 
