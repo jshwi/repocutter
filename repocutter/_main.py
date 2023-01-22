@@ -180,15 +180,15 @@ def _stage_pre_commit(repo: _Path) -> _t.Generator[None, None, None]:
 
 
 def _revert_ignored(
-    paths: tuple[_Path, ...], repo: _Path, metadata: _MetaData
+    paths: tuple[_Path, ...], repo: _Path, defaults: _Defaults
 ) -> None:
     with _ChDir(repo):
         with _stage_pre_commit(repo):
             for path in paths:
                 rgx = _re.match(r"{{\s?cookiecutter\.(.[^ ]*)\s?}}", str(path))
                 if rgx:
-                    new_path = metadata.get(rgx.group(1))
-                    if new_path is not None:
+                    new_path = defaults.get(rgx.group(1))
+                    if not isinstance(new_path, list) and new_path is not None:
                         path = _Path(new_path)
 
                 if path.exists():
@@ -277,7 +277,7 @@ def main() -> int:
                 _shutil.rmtree(temp_git_dir)
 
             _shutil.copytree(archived_repo / _GIT_DIR, temp_git_dir)
-            _revert_ignored(parser.args.ignore, temp_repo, metadata)
+            _revert_ignored(parser.args.ignore, temp_repo, defaults)
             _shutil.rmtree(repo)
             _shutil.move(temp_repo, repo)
 
