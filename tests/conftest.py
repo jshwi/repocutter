@@ -4,6 +4,7 @@ tests.conftest
 """
 from __future__ import annotations
 
+import json
 import typing as t
 from pathlib import Path
 
@@ -12,7 +13,6 @@ import tomli_w
 
 import repocutter
 
-from ._templates import COOKIECUTTER_JSON
 from ._utils import (
     GIT_TREE,
     FixtureMain,
@@ -23,6 +23,7 @@ from ._utils import (
     Git,
     MockJson,
     MockTemporaryDirectory,
+    cookiecutter_json,
 )
 
 
@@ -74,7 +75,7 @@ def fixture_cookiecutter_package(
     make_tree(
         cookiecutter_package,
         {
-            "cookiecutter.json": COOKIECUTTER_JSON,
+            "cookiecutter.json": json.dumps(cookiecutter_json),
             "{{ cookiecutter.project_name }}": {},
         },
     )
