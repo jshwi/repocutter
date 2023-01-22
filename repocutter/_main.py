@@ -147,11 +147,7 @@ class _ChDir:
 
 
 @_contextlib.contextmanager
-def temporary_directory() -> _t.Generator[_Path, None, None]:
-    """Instantiate a temporary directory as a ``Path`` object.
-
-    :return: Yield a ``Path`` object.
-    """
+def _temporary_directory() -> _t.Generator[_Path, None, None]:
     with _TemporaryDirectory() as tempdir:
         yield _Path(tempdir)
 
@@ -228,7 +224,7 @@ def main() -> int:
     if parser.args.gc:
         _garbage_collection(cache_dir)
 
-    with temporary_directory() as temp:
+    with _temporary_directory() as temp:
         template = temp / parser.args.path.name
         _shutil.copytree(parser.args.path, template)
         config = template / "cookiecutter.json"
