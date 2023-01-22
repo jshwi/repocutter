@@ -2,7 +2,7 @@
 tests._test
 ===========
 """
-# pylint: disable=too-many-arguments,protected-access
+# pylint: disable=too-many-arguments,protected-access,too-many-locals
 from __future__ import annotations
 
 import os
@@ -487,8 +487,9 @@ def test_main_checkout_branch(
     [
         (0, 1, "checkout -b cookiecutter failed"),
         (1, 0, "checkout master failed"),
+        (2, 1, "checkout -b cookiecutter failed"),
     ],
-    ids=["new", "rev"],
+    ids=["new", "rev", "already-rev"],
 )
 def test_main_checkout_branch_fail(
     monkeypatch: pytest.MonkeyPatch,
@@ -523,7 +524,10 @@ def test_main_checkout_branch_fail(
         self._stderr.append(f"error: {' '.join(str(i) for i in args)} failed")
         raise CalledProcessError(1, "checkout")
 
-    mocker = [lambda *_, **__: None, fail]
+    def _stderr_but_no_fail(self: Git, *_: str, **__: object) -> None:
+        self._stderr.append("Already on 'master'")
+
+    mocker = [lambda *_, **__: None, fail, _stderr_but_no_fail]
     calls.extend([mocker[0], mocker[first], mocker[second]])
 
     class _Git(Git):
