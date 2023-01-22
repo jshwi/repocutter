@@ -488,6 +488,7 @@ def test_main_checkout_branch(
         (0, 1, "checkout -b cookiecutter failed"),
         (1, 0, "checkout master failed"),
     ],
+    ids=["new", "rev"],
 )
 def test_main_checkout_branch_fail(
     monkeypatch: pytest.MonkeyPatch,
