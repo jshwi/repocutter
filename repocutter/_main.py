@@ -202,10 +202,6 @@ def _revert_ignored(
 def _checkout_branches(repo: _Path, existing: str, new: str) -> int:
     try:
         _git.checkout(existing, capture=True)
-    except _CalledProcessError:
-        _report(_WARNING, repo, _git.stderr()[0].split(": ")[1])
-        return 1
-    try:
         _git.checkout("-b", new, capture=True)
     except _CalledProcessError:
         _report(_WARNING, repo, _git.stderr()[0].split(": ")[1])
