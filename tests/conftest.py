@@ -9,17 +9,15 @@ import typing as t
 from pathlib import Path
 
 import pytest
-import tomli_w
 
 import repocutter
 
 from ._utils import (
-    GIT_TREE,
     FixtureMain,
+    FixtureMakeRepo,
     FixtureMakeTree,
     FixtureMockCookiecutter,
     FixtureMockTemporaryDirectory,
-    FixtureWritePyprojectToml,
     Git,
     MockJson,
     MockTemporaryDirectory,
@@ -46,18 +44,24 @@ def fixture_make_tree() -> FixtureMakeTree:
     return _make_tree
 
 
-@pytest.fixture(name="repo")
-def fixture_repo(tmp_path: Path, make_tree: FixtureMakeTree) -> Path:
-    """Create and return a test repo to cut.
+@pytest.fixture(name="make_repo")
+def fixture_make_repo(
+    tmp_path: Path, make_tree: FixtureMakeTree
+) -> FixtureMakeRepo:
+    """Create and return test repo to cut.
 
     :param tmp_path: Create and return temporary directory.
     :param make_tree: Make a directory and it's contents.
     :return: Function for using this fixture.
     """
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    make_tree(repo, {".git": GIT_TREE})
-    return repo
+
+    def _fixture_make_repo(tree: dict[str, object]) -> Path:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        make_tree(repo, tree)
+        return repo
+
+    return _fixture_make_repo
 
 
 @pytest.fixture(name="cookiecutter_package")
@@ -124,45 +128,6 @@ def fixture_main(monkeypatch: pytest.MonkeyPatch) -> FixtureMain:
         return repocutter.main()
 
     return _main
-
-
-@pytest.fixture(name="write_pyproject_toml")
-def fixture_write_pyproject_toml() -> FixtureWritePyprojectToml:
-    """Write pyproject.toml file with test attributes.
-
-    :return: Function for using this fixture.
-    """
-
-    def _write_pyproject_toml(
-        path: Path,
-        name: str,
-        description: str,
-        keywords: tuple[str, ...],
-        version: str,
-    ) -> None:
-        authors = ["jshwi <stephen@jshwisolutions.com>"]
-        obj = {
-            "tool": {
-                "poetry": {
-                    "authors": authors,
-                    "description": description,
-                    "documentation": (
-                        f"https://{name}.readthedocs.io/en/latest"
-                    ),
-                    "homepage": f"https://pypi.org/project/{name}/",
-                    "keywords": keywords,
-                    "license": "MIT",
-                    "maintainers": authors,
-                    "name": name,
-                    "readme": "README.rst",
-                    "repository": "https://github.com/jshwi/repo1",
-                    "version": version,
-                }
-            }
-        }
-        path.write_text(tomli_w.dumps(obj))
-
-    return _write_pyproject_toml
 
 
 @pytest.fixture(name="mock_json")

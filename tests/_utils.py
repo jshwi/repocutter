@@ -17,11 +17,9 @@ from templatest.utils import VarPrefix, VarSeq
 FixtureMain = t.Callable[..., int]
 FixtureMakeTree = t.Callable[[Path, t.Dict[t.Any, t.Any]], None]
 FixtureGitInit = t.Callable[[Path], None]
-FixtureWritePyprojectToml = t.Callable[
-    [Path, str, str, t.Tuple[str, ...], str], None
-]
 FixtureMockCookiecutter = t.Callable[[t.Callable[..., None]], None]
 FixtureMockTemporaryDirectory = t.Callable[..., None]
+FixtureMakeRepo = t.Callable[[t.Dict[str, t.Any]], Path]
 
 name = VarSeq("name")
 description = VarSeq("description")
@@ -29,6 +27,7 @@ flags = VarPrefix("--", slug="-")
 file = VarSeq("file")
 folder = VarSeq("dir")
 version = VarSeq("1.0", ".")
+keyword = VarSeq("keyword")
 
 cookiecutter_json = {
     "author": "Stephen Whitlock",
@@ -45,7 +44,6 @@ cookiecutter_json = {
 }
 
 
-KEYWORDS = ("one", "two", "three", "four", "five")
 GIT_DIR = ".git"
 GIT_TREE = {
     "config": None,
@@ -125,3 +123,58 @@ class MockTemporaryDirectory:
         temp_dir = self._temp_dirs.pop(0)
         temp_dir.mkdir()
         yield str(temp_dir)
+
+
+class KeyWords(t.List[str]):
+    """Represents a list of keywords.
+
+    :param suffix: Something to make the keywords unique.
+    """
+
+    def __init__(self, suffix: int) -> None:
+        super().__init__([f"{keyword[suffix]}_{i}" for i in range(5)])
+
+
+class PyProjectParams(
+    t.Dict[str, t.Dict[str, t.Dict[str, t.Union[str, t.List[str], KeyWords]]]]
+):
+    """Represents contents of a pyproject.toml file.
+
+    :param project_name: Name of project.
+    :param project_description: Project description.
+    :param project_keywords: Project keywords.
+    :param project_version: Project's version.
+    """
+
+    authors = ["jshwi <stephen@jshwisolutions.com>"]
+
+    def __init__(
+        self,
+        project_name: str,
+        project_description: str,
+        project_keywords: KeyWords,
+        project_version: str,
+    ) -> None:
+        super().__init__(
+            {
+                "tool": {
+                    "poetry": {
+                        "authors": self.authors,
+                        "description": project_description,
+                        "documentation": (
+                            f"https://{project_name}.readthedocs.io/en/latest"
+                        ),
+                        "homepage": (
+                            f"https://pypi.org/project/{project_name}/"
+                        ),
+                        "keywords": project_keywords,
+                        "license": "MIT",
+                        "maintainers": self.authors,
+                        "name": project_name,
+                        "readme": "README.rst",
+                        "repository": "https://github.com/jshwi/repo1",
+                        "version": project_version,
+                    }
+                }
+            }
+        )

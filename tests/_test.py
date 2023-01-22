@@ -12,22 +12,24 @@ from subprocess import CalledProcessError
 
 import checksumdir
 import pytest
+import tomli_w
 
 import repocutter
 
 from ._utils import (
     GIT_DIR,
     GIT_TREE,
-    KEYWORDS,
     PYPROJECT_TOML,
     TMP,
     FixtureMain,
+    FixtureMakeRepo,
     FixtureMakeTree,
     FixtureMockCookiecutter,
     FixtureMockTemporaryDirectory,
-    FixtureWritePyprojectToml,
     Git,
+    KeyWords,
     MockJson,
+    PyProjectParams,
     description,
     file,
     flags,
@@ -49,9 +51,8 @@ def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_main_exit_status(
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
     mock_json: MockJson,
 ) -> None:
@@ -65,23 +66,27 @@ def test_main_exit_status(
 
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param mock_json: Mock ``json`` module.
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    keywords = KeyWords(0)
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(name[0], description[0], keywords, version[0])
+            ),
+        }
     )
     mock_cookiecutter(lambda *_, **__: None)
     assert main(cookiecutter_package, repo) == 0
     assert mock_json.dumped["project_name"] == name[0]
     assert mock_json.dumped["project_description"] == description[0]
-    assert mock_json.dumped["project_keywords"] == ",".join(KEYWORDS)
+    assert mock_json.dumped["project_keywords"] == ",".join(keywords)
     assert mock_json.dumped["project_version"] == version[0]
     assert mock_json.dumped["include_entry_point"] == "n"
     assert checksumdir.dirhash(cookiecutter_package) == checksum
@@ -92,25 +97,29 @@ def test_main_exit_status(
 
 def test_main_post_hook_git(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
     mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
-    write_pyproject_toml: FixtureWritePyprojectToml,
 ) -> None:
     """Test ``repocutter.main`` with a post gen hook that inits repo.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param make_tree: Make a directory and it's contents.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     """
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
     )
     mock_cookiecutter(
         lambda *_, **__: make_tree(
@@ -122,30 +131,34 @@ def test_main_post_hook_git(
 
 def test_main_already_cached(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
     mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_temporary_directory: FixtureMockTemporaryDirectory,
 ) -> None:
     """Test ``repocutter.main`` when the same repo is already saved.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param make_tree: Make a directory and it's contents.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
     """
-    temp_dir = repo.parent / TMP
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
     )
+    temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
     cached = (
         repo.parent
@@ -163,26 +176,30 @@ def test_main_already_cached(
 
 def test_main_entry_point(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
     mock_json: MockJson,
 ) -> None:
     """Test ``repocutter.main`` with entry point.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param mock_json: Mock ``json`` module.
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
     )
     package = repo / name[0]
     package.mkdir()
@@ -196,28 +213,32 @@ def test_main_entry_point(
 
 def test_main_ctrl_c(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
 ) -> None:
     """Test ``repocutter.main`` with SIGINT.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     """
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
+    )
 
     def _sigint(*_: object, **__: object) -> None:
         raise KeyboardInterrupt
 
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
-    )
     template_checksum = checksumdir.dirhash(cookiecutter_package)
     repo_checksum = checksumdir.dirhash(repo)
     mock_cookiecutter(_sigint)
@@ -231,38 +252,47 @@ def test_main_ctrl_c(
 def test_main_no_dir(
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
 ) -> None:
     """Test ``repocutter.main`` skipping of non-existing dir.
 
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     """
+    repo = make_repo({})
     shutil.rmtree(repo)
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "does not exist" in std.out
 
 
-def test_main_no_repo(
+def test_main_no_make_repo(
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
 ) -> None:
     """Test ``repocutter.main`` skipping of non-repository.
 
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     """
-    shutil.rmtree(repo / ".git")
+    repo = make_repo(
+        {
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            )
+        }
+    )
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "not a repository" in std.out
@@ -271,17 +301,18 @@ def test_main_no_repo(
 def test_main_no_pyproject(
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
 ) -> None:
     """Test ``repocutter.main`` skipping of repos without pyproject.
 
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     """
+    repo = make_repo({GIT_DIR: GIT_TREE})
     main(cookiecutter_package, repo)
     std = capsys.readouterr()
     assert "missing pyproject.toml" in std.out
@@ -290,24 +321,28 @@ def test_main_no_pyproject(
 def test_main_gc(
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
 ) -> None:
     """Test ``repocutter.main`` with ``-c/--gc``.
 
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     """
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
     )
     mock_cookiecutter(lambda *_, **__: None)
 
@@ -321,31 +356,35 @@ def test_main_gc(
 
 def test_main_avoid_pre_commit_unstaged_error(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
     mock_cookiecutter: FixtureMockCookiecutter,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     make_tree: FixtureMakeTree,
     mock_temporary_directory: FixtureMockTemporaryDirectory,
 ) -> None:
     """Test ``repocutter.main`` and checking out with pre-commit config.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param make_tree: Make a directory and it's contents.
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
     """
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
+    )
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
-    )
     working_tree = {
         repo.name: {".pre-commit-config.yaml": None, file[1]: None}
     }
@@ -358,26 +397,33 @@ def test_main_avoid_pre_commit_unstaged_error(
 
 def test_main_no_head(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
     mock_cookiecutter: FixtureMockCookiecutter,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     make_tree: FixtureMakeTree,
     mock_temporary_directory: FixtureMockTemporaryDirectory,
 ) -> None:
     """Test ``repocutter.main`` when no HEAD to checkout.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param make_tree: Make a directory and it's contents.
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
     """
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
+    )
     called = []
 
     def _checkout(*args: str, **__: object) -> None:
@@ -389,9 +435,6 @@ def test_main_no_head(
 
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
-    )
     working_tree = {repo.name: {".pre-commit-config.yaml": None}}
     make_tree(repo.parent, working_tree)
     mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
@@ -419,10 +462,9 @@ def test_main_no_head(
 )
 def test_main_ignore_path(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
     mock_cookiecutter: FixtureMockCookiecutter,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     make_tree: FixtureMakeTree,
     mock_temporary_directory: FixtureMockTemporaryDirectory,
     path: str,
@@ -432,12 +474,10 @@ def test_main_ignore_path(
     """Test ``repocutter.main`` and ``-i/--ignore`` argument.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param make_tree: Make a directory and it's contents.
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
@@ -445,11 +485,18 @@ def test_main_ignore_path(
     :param tree: Tree to mock.
     :param expected: Expected result.
     """
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[1], description[1], KeyWords(1), version[1]
+                )
+            ),
+        }
+    )
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[1], description[1], KEYWORDS, version[0]
-    )
     working_tree = {repo.name: tree}
     make_tree(repo.parent, working_tree)
     mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
@@ -459,23 +506,27 @@ def test_main_ignore_path(
 
 def test_main_checkout_branch(
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
 ) -> None:
     """Test ``repocutter.main`` when checking out branches.
 
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     """
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
     )
     mock_cookiecutter(lambda *_, **__: None)
     main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")
@@ -496,9 +547,8 @@ def test_main_checkout_branch_fail(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture,
     main: FixtureMain,
-    repo: Path,
+    make_repo: FixtureMakeRepo,
     cookiecutter_package: Path,
-    write_pyproject_toml: FixtureWritePyprojectToml,
     mock_cookiecutter: FixtureMockCookiecutter,
     first: int,
     second: int,
@@ -509,16 +559,24 @@ def test_main_checkout_branch_fail(
     :param monkeypatch: Mock patch environment and attributes.
     :param capsys: Capture sys out and err.
     :param main: Mock ``main`` function.
-    :param repo: Create and return a test repo to cut.
+    :param make_repo: Create and return a test repo to cut.
     :param cookiecutter_package: Create and return a test
         ``cookiecutter`` template package.
-    :param write_pyproject_toml: Write pyproject.toml file with test
-        attributes.
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     :param first: Result of first call the ``checkout``.
     :param second: Result of second call the ``checkout``.
     :param expected: Expected result.
     """
+    repo = make_repo(
+        {
+            GIT_DIR: GIT_TREE,
+            PYPROJECT_TOML: tomli_w.dumps(
+                PyProjectParams(
+                    name[0], description[0], KeyWords(0), version[0]
+                )
+            ),
+        }
+    )
     calls = []
 
     def fail(self: Git, *args: str, **__: object) -> None:
@@ -537,9 +595,6 @@ def test_main_checkout_branch_fail(
             return 0
 
     monkeypatch.setattr("repocutter._main._git", _Git())
-    write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
-    )
     mock_cookiecutter(lambda *_, **__: None)
     main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")
     std = capsys.readouterr()
