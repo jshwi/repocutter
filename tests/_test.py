@@ -35,6 +35,7 @@ from ._utils import (
     flags,
     folder,
     name,
+    name_dash,
     version,
 )
 
@@ -470,22 +471,35 @@ def test_main_no_head(
 
 
 @pytest.mark.parametrize(
-    "path,tree,expected",
+    "src_name,path,tree,expected",
     [
-        (file[1], {file[1]: None}, file[1]),
+        (file[1], file[1], {file[1]: None}, file[1]),
         (
+            folder[1],
             folder[1],
             {folder[1]: {file[1]: None, file[2]: None, file[3]: None}},
             folder[1],
         ),
-        ("{{cookiecutter.project_name}}", {name[1]: {file[1]: None}}, name[1]),
         (
+            name[1],
+            "{{cookiecutter.project_name}}",
+            {name[1]: {file[1]: None}},
+            name[1],
+        ),
+        (
+            name[1],
             "{{ cookiecutter.project_name }}",
             {name[1]: {file[1]: None}},
             name[1],
         ),
+        (
+            "project-slug",
+            "{{ cookiecutter.project_slug }}",
+            {"project-name": {file[1]: None}},
+            "project_slug",
+        ),
     ],
-    ids=["file", "dir", "interpolate", "interpolate_space"],
+    ids=["file", "dir", "interpolate", "interpolate_space", "interpolate_var"],
 )
 def test_main_ignore_path(
     main: FixtureMain,
@@ -494,6 +508,7 @@ def test_main_ignore_path(
     mock_cookiecutter: FixtureMockCookiecutter,
     make_tree: FixtureMakeTree,
     mock_temporary_directory: FixtureMockTemporaryDirectory,
+    src_name: str,
     path: str,
     tree: dict[str, None | dict[str, dict[str, None]]],
     expected: str,
@@ -508,18 +523,19 @@ def test_main_ignore_path(
     :param make_tree: Make a directory and it's contents.
     :param mock_temporary_directory: Mock
         ``tempfile.TemporaryDirectory``.
+    :param src_name: Project name.
     :param path: Path to ignore.
     :param tree: Tree to mock.
     :param expected: Expected result.
     """
     repos = make_repos(
         Repo(
-            name[1],
+            src_name,
             {
                 GIT_DIR: GIT_TREE,
                 PYPROJECT_TOML: tomli_w.dumps(
                     PyProjectParams(
-                        name[1], description[1], KeyWords(1), version[1]
+                        src_name, description[1], KeyWords(1), version[1]
                     )
                 ),
             },
@@ -527,7 +543,7 @@ def test_main_ignore_path(
     )
     temp_dir = repos[0].parent / TMP
     mock_temporary_directory(temp_dir)
-    working_tree = {repos[0].name: tree}
+    working_tree = {src_name: tree}
     make_tree(repos[0].parent, working_tree)
     mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
     main(cookiecutter_package, repos[0], flags.ignore, path)
@@ -635,3 +651,79 @@ def test_main_checkout_branch_fail(
     main(cookiecutter_package, repos[0], flags.branch, "master,cookiecutter")
     std = capsys.readouterr()
     assert expected in std.out
+
+
+def test_main_interpolate_var(
+    main: FixtureMain,
+    make_repos: FixtureMakeRepos,
+    cookiecutter_package: Path,
+    mock_cookiecutter: FixtureMockCookiecutter,
+    make_tree: FixtureMakeTree,
+    mock_temporary_directory: FixtureMockTemporaryDirectory,
+) -> None:
+    """Test ``repocutter.main`` with vars defined in json.
+
+    Confirm that interpolated string is reset between looping, as if
+    variable is simply overridden, the config will hold the interpolated
+    var from the previous run.
+
+    Position of defaults and the addition of a read only and write only
+    config solves this problem.
+
+    :param main: Mock ``main`` function.
+    :param make_repos: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    :param make_tree: Make a directory and it's contents.
+    :param mock_temporary_directory: Mock
+        ``tempfile.TemporaryDirectory``.
+    """
+    tree_1 = {
+        GIT_DIR: GIT_TREE,
+        PYPROJECT_TOML: tomli_w.dumps(
+            PyProjectParams(
+                name_dash[0], description[0], KeyWords(0), version[0]
+            )
+        ),
+    }
+    tree_2 = {
+        GIT_DIR: GIT_TREE,
+        PYPROJECT_TOML: tomli_w.dumps(
+            PyProjectParams(
+                name_dash[1], description[1], KeyWords(1), version[1]
+            )
+        ),
+    }
+    tree_3 = {
+        GIT_DIR: GIT_TREE,
+        PYPROJECT_TOML: tomli_w.dumps(
+            PyProjectParams(
+                name_dash[2], description[2], KeyWords(2), version[2]
+            )
+        ),
+    }
+    repos = make_repos(
+        Repo(name_dash[0], tree_1),
+        Repo(name_dash[1], tree_2),
+        Repo(name_dash[2], tree_3),
+    )
+    temp_dir = repos[0].parent / TMP
+    mock_temporary_directory(temp_dir)
+    cookiecutter_calls = [
+        lambda *_, **__: make_tree(temp_dir, {name_dash[0]: tree_1}),
+        lambda *_, **__: make_tree(temp_dir, {name_dash[1]: tree_2}),
+        lambda *_, **__: make_tree(temp_dir, {name_dash[2]: tree_3}),
+    ]
+    mock_cookiecutter(cookiecutter_calls.pop(0))
+    main(
+        cookiecutter_package,
+        repos[0],
+        repos[1],
+        repos[2],
+        flags.ignore,
+        "{{ cookiecutter.project_slug }}",
+    )
+    assert f"checkout HEAD -- {name[0]}" in repocutter._main._git.called
+    assert f"checkout HEAD -- {name[1]}" in repocutter._main._git.called
+    assert f"checkout HEAD -- {name[2]}" in repocutter._main._git.called

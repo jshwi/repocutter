@@ -22,7 +22,9 @@ import appdirs as _appdirs
 import checksumdir as _checksumdir
 import tomli as _tomli
 from arcon import ArgumentParser as _ArgumentParser
+from cookiecutter.environment import StrictEnvironment as _StrictEnvironment
 from cookiecutter.main import cookiecutter as _cookiecutter
+from cookiecutter.prompt import render_variable as _render_variable
 from gitspy import Git as _Git
 from object_colors import Color as _Color
 
@@ -130,7 +132,18 @@ class _MetaData(_t.Dict[str, str]):
 
 
 class _Defaults(_t.Dict[str, _t.Union[str, _t.List[str]]]):
-    """Type for cookiecutter.json contents."""
+    def __init__(self, __m: dict[str, str | list[str]]) -> None:
+        super().__init__(__m)
+        self._env = _StrictEnvironment(context=self)
+
+    def render(self, metadata: _MetaData) -> None:
+        """Update and render `jinja2` template vars with parsed data.
+
+        :param metadata: Data parsed from config.
+        """
+        self.update(metadata)
+        for key, value in self.items():
+            self[key] = _render_variable(self._env, value, self)
 
 
 class _ChDir:
@@ -225,12 +238,15 @@ def main() -> int:
     if parser.args.gc:
         _garbage_collection(cache_dir)
 
+    readable_config = parser.args.path / "cookiecutter.json"
     with _temporary_directory() as temp:
         template = temp / parser.args.path.name
         _shutil.copytree(parser.args.path, template)
-        config = template / "cookiecutter.json"
-        defaults = _Defaults(_json.loads(config.read_text(encoding="utf-8")))
+        writeable_config = template / "cookiecutter.json"
         for repo in parser.args.repos:
+            defaults = _Defaults(
+                _json.loads(readable_config.read_text(encoding="utf-8"))
+            )
             pyproject_toml = repo / "pyproject.toml"
             git_dir = repo / _GIT_DIR
             if not repo.is_dir():
@@ -253,8 +269,10 @@ def main() -> int:
                 _tomli.loads(pyproject_toml.read_text(encoding="utf-8"))
             )
             metadata.setentry(repo)
-            defaults.update(metadata)
-            config.write_text(_json.dumps(defaults), encoding="utf-8")
+            defaults.render(metadata)
+            writeable_config.write_text(
+                _json.dumps(defaults), encoding="utf-8"
+            )
             temp_git_dir = temp_repo / _GIT_DIR
             with _ChDir(temp_repo):
                 _git.stash(file=_os.devnull)

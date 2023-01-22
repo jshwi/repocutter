@@ -21,7 +21,10 @@ FixtureMockCookiecutter = t.Callable[[t.Callable[..., None]], None]
 FixtureMockTemporaryDirectory = t.Callable[..., None]
 FixtureMakeRepos = t.Callable[..., t.List[Path]]
 
-name = VarSeq("name")
+NAME = "name"
+
+name = VarSeq(NAME)
+name_dash = VarSeq(NAME, suffix="-")
 description = VarSeq("description")
 flags = VarPrefix("--", slug="-")
 file = VarSeq("file")
@@ -170,7 +173,7 @@ class PyProjectParams(
                         "keywords": project_keywords,
                         "license": "MIT",
                         "maintainers": self.authors,
-                        "name": project_name,
+                        NAME: project_name,
                         "readme": "README.rst",
                         "repository": "https://github.com/jshwi/repo1",
                         "version": project_version,
