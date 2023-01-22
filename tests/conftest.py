@@ -14,13 +14,14 @@ import repocutter
 
 from ._utils import (
     FixtureMain,
-    FixtureMakeRepo,
+    FixtureMakeRepos,
     FixtureMakeTree,
     FixtureMockCookiecutter,
     FixtureMockTemporaryDirectory,
     Git,
     MockJson,
     MockTemporaryDirectory,
+    Repo,
     cookiecutter_json,
 )
 
@@ -44,10 +45,10 @@ def fixture_make_tree() -> FixtureMakeTree:
     return _make_tree
 
 
-@pytest.fixture(name="make_repo")
+@pytest.fixture(name="make_repos")
 def fixture_make_repo(
     tmp_path: Path, make_tree: FixtureMakeTree
-) -> FixtureMakeRepo:
+) -> FixtureMakeRepos:
     """Create and return test repo to cut.
 
     :param tmp_path: Create and return temporary directory.
@@ -55,13 +56,15 @@ def fixture_make_repo(
     :return: Function for using this fixture.
     """
 
-    def _fixture_make_repo(tree: dict[str, object]) -> Path:
-        repo = tmp_path / "repo"
-        repo.mkdir()
-        make_tree(repo, tree)
-        return repo
+    def _fixture_make_repos(*args: Repo) -> t.List[Path]:
+        repos = []
+        for arg in args:
+            make_tree(tmp_path, {arg.name: arg.contents})
+            repos.append(tmp_path / arg.name)
 
-    return _fixture_make_repo
+        return repos
+
+    return _fixture_make_repos
 
 
 @pytest.fixture(name="cookiecutter_package")

@@ -19,7 +19,7 @@ FixtureMakeTree = t.Callable[[Path, t.Dict[t.Any, t.Any]], None]
 FixtureGitInit = t.Callable[[Path], None]
 FixtureMockCookiecutter = t.Callable[[t.Callable[..., None]], None]
 FixtureMockTemporaryDirectory = t.Callable[..., None]
-FixtureMakeRepo = t.Callable[[t.Dict[str, t.Any]], Path]
+FixtureMakeRepos = t.Callable[..., t.List[Path]]
 
 name = VarSeq("name")
 description = VarSeq("description")
@@ -178,3 +178,10 @@ class PyProjectParams(
                 }
             }
         )
+
+
+class Repo(t.NamedTuple):
+    """New repository type."""
+
+    name: str
+    contents: t.Dict[str, t.Any]
