@@ -129,6 +129,10 @@ class _MetaData(_t.Dict[str, str]):
         self["include_entry_point"] = "y" if main_file.is_file() else "n"
 
 
+class _Defaults(_t.Dict[str, _t.Union[str, _t.List[str]]]):
+    """Type for cookiecutter.json contents."""
+
+
 class _ChDir:
     def __init__(self, path: _Path) -> None:
         self._cwd = _Path.cwd()
@@ -225,7 +229,7 @@ def main() -> int:
         template = temp / parser.args.path.name
         _shutil.copytree(parser.args.path, template)
         config = template / "cookiecutter.json"
-        defaults = _json.loads(config.read_text(encoding="utf-8"))
+        defaults = _Defaults(_json.loads(config.read_text(encoding="utf-8")))
         for repo in parser.args.repos:
             pyproject_toml = repo / "pyproject.toml"
             git_dir = repo / _GIT_DIR
