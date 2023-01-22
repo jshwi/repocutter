@@ -21,7 +21,6 @@ from . import (
     KEYWORDS,
     PYPROJECT_TOML,
     TMP,
-    VERSION,
     FixtureMain,
     FixtureMakeTree,
     FixtureMockCookiecutter,
@@ -32,6 +31,7 @@ from . import (
     flags,
     folder,
     name,
+    version,
 )
 from ._utils import Git, MockJson
 
@@ -41,8 +41,8 @@ def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
 
     :param monkeypatch: Mock patch environment and attributes.
     """
-    monkeypatch.setattr("repocutter.__version__", VERSION)
-    assert repocutter.__version__ == VERSION
+    monkeypatch.setattr("repocutter.__version__", version[0])
+    assert repocutter.__version__ == version[0]
 
 
 def test_main_exit_status(
@@ -74,14 +74,14 @@ def test_main_exit_status(
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_cookiecutter(lambda *_, **__: None)
     assert main(cookiecutter_package, repo) == 0
     assert mock_json.dumped["project_name"] == name[0]
     assert mock_json.dumped["project_description"] == description[0]
     assert mock_json.dumped["project_keywords"] == ",".join(KEYWORDS)
-    assert mock_json.dumped["project_version"] == VERSION
+    assert mock_json.dumped["project_version"] == version[0]
     assert mock_json.dumped["include_entry_point"] == "n"
     assert checksumdir.dirhash(cookiecutter_package) == checksum
     std = capsys.readouterr()
@@ -109,7 +109,7 @@ def test_main_post_hook_git(
         attributes.
     """
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_cookiecutter(
         lambda *_, **__: make_tree(
@@ -143,7 +143,7 @@ def test_main_already_cached(
     """
     temp_dir = repo.parent / TMP
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_temporary_directory(temp_dir)
     cached = (
@@ -181,7 +181,7 @@ def test_main_entry_point(
     """
     checksum = checksumdir.dirhash(cookiecutter_package)
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     package = repo / name[0]
     package.mkdir()
@@ -215,7 +215,7 @@ def test_main_ctrl_c(
         raise KeyboardInterrupt
 
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     template_checksum = checksumdir.dirhash(cookiecutter_package)
     repo_checksum = checksumdir.dirhash(repo)
@@ -306,7 +306,7 @@ def test_main_gc(
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     """
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_cookiecutter(lambda *_, **__: None)
 
@@ -343,7 +343,7 @@ def test_main_avoid_pre_commit_unstaged_error(
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     working_tree = {
         repo.name: {".pre-commit-config.yaml": None, file[1]: None}
@@ -389,7 +389,7 @@ def test_main_no_head(
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     working_tree = {repo.name: {".pre-commit-config.yaml": None}}
     make_tree(repo.parent, working_tree)
@@ -447,7 +447,7 @@ def test_main_ignore_path(
     temp_dir = repo.parent / TMP
     mock_temporary_directory(temp_dir)
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[1], description[1], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[1], description[1], KEYWORDS, version[0]
     )
     working_tree = {repo.name: tree}
     make_tree(repo.parent, working_tree)
@@ -474,7 +474,7 @@ def test_main_checkout_branch(
     :param mock_cookiecutter: Mock ``cookiecutter`` module.
     """
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_cookiecutter(lambda *_, **__: None)
     main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")
@@ -537,7 +537,7 @@ def test_main_checkout_branch_fail(
 
     monkeypatch.setattr("repocutter._main._git", _Git())
     write_pyproject_toml(
-        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, version[0]
     )
     mock_cookiecutter(lambda *_, **__: None)
     main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")

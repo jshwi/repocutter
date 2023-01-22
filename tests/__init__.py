@@ -23,8 +23,8 @@ description = VarSeq("description")
 flags = VarPrefix("--", slug="-")
 file = VarSeq("file")
 folder = VarSeq("dir")
+version = VarSeq("1.0", ".")
 
-VERSION = "0.1.0"
 KEYWORDS = ("one", "two", "three", "four", "five")
 GIT_DIR = ".git"
 GIT_TREE = {
