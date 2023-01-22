@@ -12,16 +12,18 @@ import tomli_w
 
 import repocutter
 
-from . import (
+from ._templates import COOKIECUTTER_JSON
+from ._utils import (
     GIT_TREE,
     FixtureMain,
     FixtureMakeTree,
     FixtureMockCookiecutter,
     FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
+    Git,
+    MockJson,
+    MockTemporaryDirectory,
 )
-from ._templates import COOKIECUTTER_JSON
-from ._utils import Git, MockJson, MockTemporaryDirectory
 
 
 @pytest.fixture(name="make_tree")

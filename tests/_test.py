@@ -15,7 +15,7 @@ import pytest
 
 import repocutter
 
-from . import (
+from ._utils import (
     GIT_DIR,
     GIT_TREE,
     KEYWORDS,
@@ -26,6 +26,8 @@ from . import (
     FixtureMockCookiecutter,
     FixtureMockTemporaryDirectory,
     FixtureWritePyprojectToml,
+    Git,
+    MockJson,
     description,
     file,
     flags,
@@ -33,7 +35,6 @@ from . import (
     name,
     version,
 )
-from ._utils import Git, MockJson
 
 
 def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
