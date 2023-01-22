@@ -5,6 +5,7 @@ tests._test
 # pylint: disable=too-many-arguments,protected-access
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -32,7 +33,7 @@ from . import (
     folder,
     name,
 )
-from ._utils import MockJson
+from ._utils import Git, MockJson
 
 
 def test_version(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -453,3 +454,87 @@ def test_main_ignore_path(
     mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
     main(cookiecutter_package, repo, flags.ignore, path)
     assert f"checkout HEAD -- {expected}" in repocutter._main._git.called
+
+
+def test_main_checkout_branch(
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
+) -> None:
+    """Test ``repocutter.main`` when checking out branches.
+
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    """
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    mock_cookiecutter(lambda *_, **__: None)
+    main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")
+    assert "checkout master" in repocutter._main._git.called
+    assert "checkout -b cookiecutter" in repocutter._main._git.called
+
+
+@pytest.mark.parametrize(
+    "first,second,expected",
+    [
+        (0, 1, "checkout -b cookiecutter failed"),
+        (1, 0, "checkout master failed"),
+    ],
+)
+def test_main_checkout_branch_fail(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture,
+    main: FixtureMain,
+    repo: Path,
+    cookiecutter_package: Path,
+    write_pyproject_toml: FixtureWritePyprojectToml,
+    mock_cookiecutter: FixtureMockCookiecutter,
+    first: int,
+    second: int,
+    expected: str,
+) -> None:
+    """Test ``repocutter.main`` when checking out branches.
+
+    :param monkeypatch: Mock patch environment and attributes.
+    :param capsys: Capture sys out and err.
+    :param main: Mock ``main`` function.
+    :param repo: Create and return a test repo to cut.
+    :param cookiecutter_package: Create and return a test
+        ``cookiecutter`` template package.
+    :param write_pyproject_toml: Write pyproject.toml file with test
+        attributes.
+    :param mock_cookiecutter: Mock ``cookiecutter`` module.
+    :param first: Result of first call the ``checkout``.
+    :param second: Result of second call the ``checkout``.
+    :param expected: Expected result.
+    """
+    calls = []
+
+    def fail(self: Git, *args: str, **__: object) -> None:
+        self._stderr.append(f"error: {' '.join(str(i) for i in args)} failed")
+        raise CalledProcessError(1, "checkout")
+
+    mocker = [lambda *_, **__: None, fail]
+    calls.extend([mocker[0], mocker[first], mocker[second]])
+
+    class _Git(Git):
+        def call(self, *args: str, **_: bool | str | os.PathLike) -> int:
+            calls.pop(0)(self, *args)  # type: ignore
+            return 0
+
+    monkeypatch.setattr("repocutter._main._git", _Git())
+    write_pyproject_toml(
+        repo / PYPROJECT_TOML, name[0], description[0], KEYWORDS, VERSION
+    )
+    mock_cookiecutter(lambda *_, **__: None)
+    main(cookiecutter_package, repo, flags.branch, "master,cookiecutter")
+    std = capsys.readouterr()
+    assert expected in std.out

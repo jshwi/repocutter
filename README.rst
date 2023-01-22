@@ -52,20 +52,21 @@ Usage
 
 .. code-block:: console
 
-    usage: repocutter [-h] [-v] [-a] [-c] [-i LIST] PATH [REPOS [REPOS ...]]
+    usage: repocutter [-h] [-v] [-a] [-c] [-b REV,NEW] [-i LIST] PATH [REPOS [REPOS ...]]
 
     Checkout repos to current cookiecutter config
 
     positional arguments:
-      PATH                    path to cookiecutter template dir
-      REPOS                   repos to run cookiecutter over
+      PATH                          path to cookiecutter template dir
+      REPOS                         repos to run cookiecutter over
 
     optional arguments:
-      -h, --help              show this help message and exit
-      -v, --version           show program's version number and exit
-      -a, --accept-hooks      accept pre/post hooks
-      -c, --gc                clean up backups from previous runs
-      -i LIST, --ignore LIST  comma separated list of paths to ignore, cookiecutter vars are allowed
+      -h, --help                    show this help message and exit
+      -v, --version                 show program's version number and exit
+      -a, --accept-hooks            accept pre/post hooks
+      -c, --gc                      clean up backups from previous runs
+      -b REV,NEW, --branch REV,NEW  checkout new branch from existing revision
+      -i LIST, --ignore LIST        comma separated list of paths to ignore, cookiecutter vars are allowed
 
 Configuration
 -------------

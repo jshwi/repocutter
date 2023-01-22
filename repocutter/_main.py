@@ -84,6 +84,13 @@ class _Parser(_ArgumentParser):
             help="clean up backups from previous runs",
         )
         self.add_list_argument(
+            "-b",
+            "--branch",
+            action="store",
+            metavar="REV,NEW",
+            help="checkout new branch from existing revision",
+        )
+        self.add_list_argument(
             "-i",
             "--ignore",
             action="store",
@@ -196,6 +203,21 @@ def _revert_ignored(
                     pass
 
 
+def _checkout_branches(repo: _Path, existing: str, new: str) -> int:
+    try:
+        _git.checkout(existing, capture=True)
+    except _CalledProcessError:
+        _report(_WARNING, repo, _git.stderr()[0].split(": ")[1])
+        return 1
+    try:
+        _git.checkout("-b", new, capture=True)
+    except _CalledProcessError:
+        _report(_WARNING, repo, _git.stderr()[0].split(": ")[1])
+        return 1
+
+    return 0
+
+
 def main() -> int:
     """Main function for package.
 
@@ -239,6 +261,10 @@ def main() -> int:
             temp_git_dir = temp_repo / _GIT_DIR
             with _ChDir(temp_repo):
                 _git.stash(file=_os.devnull)
+                if parser.args.branch and _checkout_branches(
+                    repo, parser.args.branch[0], parser.args.branch[1]
+                ):
+                    continue
 
             if archived_repo.is_dir():
                 _shutil.rmtree(archived_repo)
