@@ -13,11 +13,11 @@
   },
   "homepage": "https://jshwi.github.io/repocutter/",
   "keywords": [
-    "cookiecutter",
-    "repo",
     "config",
-    "template",
-    "jinja2"
+    "cookiecutter",
+    "jinja2",
+    "repo",
+    "template"
   ],
   "license": "MIT",
   "name": "repocutter",
