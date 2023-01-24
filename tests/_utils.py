@@ -31,6 +31,7 @@ file = VarSeq("file")
 folder = VarSeq("dir")
 version = VarSeq("1.0", ".")
 keyword = VarSeq("keyword")
+tmp = VarSeq("tmp")
 
 cookiecutter_json = {
     "author": "Stephen Whitlock",
@@ -55,9 +56,18 @@ GIT_TREE = {
     "FETCH_LOG": None,
     "refs": {"heads": None, "tags": None},
     "FETCH_HEAD": None,
+    "hooks": {
+        "commit-msg": None,
+        "post-checkout": None,
+        "post-commit": None,
+        "post-merge": None,
+        "post-rewrite": None,
+        "pre-commit": None,
+        "pre-merge-commit": None,
+        "prepare-commit-msg": None,
+    },
 }
 PYPROJECT_TOML = "pyproject.toml"
-TMP = "tmp"
 
 
 class MockJson:

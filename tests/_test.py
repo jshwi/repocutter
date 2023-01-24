@@ -19,7 +19,6 @@ from ._utils import (
     GIT_DIR,
     GIT_TREE,
     PYPROJECT_TOML,
-    TMP,
     FixtureMain,
     FixtureMakeRepos,
     FixtureMakeTree,
@@ -36,6 +35,7 @@ from ._utils import (
     folder,
     name,
     name_dash,
+    tmp,
     version,
 )
 
@@ -170,8 +170,9 @@ def test_main_already_cached(
             },
         )
     )
-    temp_dir = repos[0].parent / TMP
-    mock_temporary_directory(temp_dir)
+    temp_dir_1 = repos[0].parent / tmp[0]
+    temp_dir_2 = repos[0].parent / tmp[1]
+    mock_temporary_directory(temp_dir_1, temp_dir_2)
     cached = (
         repos[0].parent
         / ".cache"
@@ -182,7 +183,7 @@ def test_main_already_cached(
     make_tree(cached, {GIT_DIR: GIT_TREE})
     mock_cookiecutter(
         lambda *_, **__: make_tree(
-            temp_dir, {repos[0].name: {GIT_DIR: GIT_TREE}}
+            temp_dir_1, {repos[0].name: {GIT_DIR: GIT_TREE}}
         )
     )
     main(cookiecutter_package, repos[0])
@@ -408,13 +409,14 @@ def test_main_avoid_pre_commit_unstaged_error(
             },
         )
     )
-    temp_dir = repos[0].parent / TMP
-    mock_temporary_directory(temp_dir)
+    temp_dir_1 = repos[0].parent / tmp[0]
+    temp_dir_2 = repos[0].parent / tmp[1]
+    mock_temporary_directory(temp_dir_1, temp_dir_2)
     working_tree = {
         repos[0].name: {".pre-commit-config.yaml": None, file[1]: None}
     }
     make_tree(repos[0].parent, working_tree)
-    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir_1, working_tree))
     main(cookiecutter_package, repos[0], flags.ignore, file[1])
     assert "add .pre-commit-config.yaml" in repocutter._main._git.called
     assert "reset .pre-commit-config.yaml" in repocutter._main._git.called
@@ -461,11 +463,12 @@ def test_main_no_head(
     # already monkey-patched
     repocutter._main._git.checkout = _checkout
 
-    temp_dir = repos[0].parent / TMP
-    mock_temporary_directory(temp_dir)
+    temp_dir_1 = repos[0].parent / tmp[0]
+    temp_dir_2 = repos[0].parent / tmp[1]
+    mock_temporary_directory(temp_dir_1, temp_dir_2)
     working_tree = {repos[0].name: {".pre-commit-config.yaml": None}}
     make_tree(repos[0].parent, working_tree)
-    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir_1, working_tree))
     main(cookiecutter_package, repos[0], flags.ignore, file[1])
     assert f"HEAD -- {file[1]}" in called
 
@@ -541,11 +544,12 @@ def test_main_ignore_path(
             },
         )
     )
-    temp_dir = repos[0].parent / TMP
-    mock_temporary_directory(temp_dir)
+    temp_dir_1 = repos[0].parent / tmp[0]
+    temp_dir_2 = repos[0].parent / tmp[1]
+    mock_temporary_directory(temp_dir_1, temp_dir_2)
     working_tree = {src_name: tree}
     make_tree(repos[0].parent, working_tree)
-    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir, working_tree))
+    mock_cookiecutter(lambda *_, **__: make_tree(temp_dir_1, working_tree))
     main(cookiecutter_package, repos[0], flags.ignore, path)
     assert f"checkout HEAD -- {expected}" in repocutter._main._git.called
 
@@ -708,12 +712,15 @@ def test_main_interpolate_var(
         Repo(name_dash[1], tree_2),
         Repo(name_dash[2], tree_3),
     )
-    temp_dir = repos[0].parent / TMP
-    mock_temporary_directory(temp_dir)
+    temp_dir_1 = repos[0].parent / tmp[0]
+    temp_dir_2 = repos[0].parent / tmp[1]
+    temp_dir_3 = repos[0].parent / tmp[2]
+    temp_dir_4 = repos[0].parent / tmp[3]
+    mock_temporary_directory(temp_dir_1, temp_dir_2, temp_dir_3, temp_dir_4)
     cookiecutter_calls = [
-        lambda *_, **__: make_tree(temp_dir, {name_dash[0]: tree_1}),
-        lambda *_, **__: make_tree(temp_dir, {name_dash[1]: tree_2}),
-        lambda *_, **__: make_tree(temp_dir, {name_dash[2]: tree_3}),
+        lambda *_, **__: make_tree(temp_dir_1, {name_dash[0]: tree_1}),
+        lambda *_, **__: make_tree(temp_dir_1, {name_dash[1]: tree_2}),
+        lambda *_, **__: make_tree(temp_dir_1, {name_dash[2]: tree_3}),
     ]
     mock_cookiecutter(cookiecutter_calls.pop(0))
     main(

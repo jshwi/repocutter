@@ -36,6 +36,7 @@ _INFO = 20
 _WARNING = 30
 _ERROR = 40
 _PRE_COMMIT_CONFIG = ".pre-commit-config.yaml"
+_HOOKS = "hooks"
 
 _git = _Git()
 _color = _Color()
@@ -192,6 +193,19 @@ def _stage_pre_commit(repo: _Path) -> _t.Generator[None, None, None]:
     _git.reset(path.name, file=_os.devnull)
 
 
+@_contextlib.contextmanager
+def _disable_hooks(repo: _Path) -> _t.Generator[None, None, None]:
+    path = repo / _GIT_DIR / _HOOKS
+    with _temporary_directory() as temp:
+        temp_hooks = temp / _HOOKS
+        if path.is_dir():
+            _shutil.move(str(path), temp_hooks)
+
+        yield
+        if temp_hooks.is_dir():
+            _shutil.move(str(temp_hooks), path)
+
+
 def _revert_ignored(
     paths: tuple[_Path, ...], repo: _Path, defaults: _Defaults
 ) -> None:
@@ -263,42 +277,43 @@ def main() -> int:
 
             temp_repo = temp / repo.name
             _shutil.copytree(repo, temp_repo)
-            archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"
-            archived_repo = cache_dir / archive_name
-            metadata = _MetaData(
-                _tomli.loads(pyproject_toml.read_text(encoding="utf-8"))
-            )
-            metadata.setentry(repo)
-            defaults.render(metadata)
-            writeable_config.write_text(
-                _json.dumps(defaults), encoding="utf-8"
-            )
-            temp_git_dir = temp_repo / _GIT_DIR
-            with _ChDir(temp_repo):
-                _git.stash(file=_os.devnull)
-                if parser.args.branch and _checkout_branches(
-                    repo, parser.args.branch[0], parser.args.branch[1]
-                ):
-                    continue
+            with _disable_hooks(temp_repo):
+                archive_name = f"{repo.name}-{_checksumdir.dirhash(git_dir)}"
+                archived_repo = cache_dir / archive_name
+                metadata = _MetaData(
+                    _tomli.loads(pyproject_toml.read_text(encoding="utf-8"))
+                )
+                metadata.setentry(repo)
+                defaults.render(metadata)
+                writeable_config.write_text(
+                    _json.dumps(defaults), encoding="utf-8"
+                )
+                temp_git_dir = temp_repo / _GIT_DIR
+                with _ChDir(temp_repo):
+                    _git.stash(file=_os.devnull)
+                    if parser.args.branch and _checkout_branches(
+                        repo, parser.args.branch[0], parser.args.branch[1]
+                    ):
+                        continue
 
-            if archived_repo.is_dir():
-                _shutil.rmtree(archived_repo)
+                if archived_repo.is_dir():
+                    _shutil.rmtree(archived_repo)
 
-            _shutil.move(str(temp_repo), archived_repo)
-            _cookiecutter(
-                template=str(template),
-                output_dir=str(temp),
-                no_input=True,
-                accept_hooks=parser.args.accept_hooks,
-            )
-            if temp_git_dir.is_dir():
-                _shutil.rmtree(temp_git_dir)
+                _shutil.move(str(temp_repo), archived_repo)
+                _cookiecutter(
+                    template=str(template),
+                    output_dir=str(temp),
+                    no_input=True,
+                    accept_hooks=parser.args.accept_hooks,
+                )
+                if temp_git_dir.is_dir():
+                    _shutil.rmtree(temp_git_dir)
 
-            _shutil.copytree(archived_repo / _GIT_DIR, temp_git_dir)
-            _revert_ignored(parser.args.ignore, temp_repo, defaults)
-            _shutil.rmtree(repo)
-            _shutil.move(temp_repo, repo)
+                _shutil.copytree(archived_repo / _GIT_DIR, temp_git_dir)
+                _revert_ignored(parser.args.ignore, temp_repo, defaults)
+                _shutil.rmtree(repo)
+                _shutil.move(temp_repo, repo)
 
-            _report(_INFO, repo, "success")
+                _report(_INFO, repo, "success")
 
     return 0
