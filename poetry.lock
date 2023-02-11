@@ -1012,15 +1012,15 @@ qa = ["flake8 (==3.8.3)", "mypy (==0.782)"]
 testing = ["Django (<3.1)", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
-name = "Jinja2"
-version = "3.0.3"
+name = "jinja2"
+version = "3.1.2"
 description = "A very fast and expressive template engine."
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "Jinja2-3.0.3-py3-none-any.whl", hash = "sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8"},
-    {file = "Jinja2-3.0.3.tar.gz", hash = "sha256:611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7"},
+    {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
+    {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
 ]
 
 [package.dependencies]
@@ -2222,25 +2222,24 @@ Sphinx = "*"
 
 [[package]]
 name = "sphinx-tabs"
-version = "3.4.0"
+version = "3.3.1"
 description = "Tabbed views for Sphinx"
 category = "dev"
 optional = false
-python-versions = "~=3.7"
+python-versions = "~=3.6"
 files = [
-    {file = "sphinx-tabs-3.4.0.tar.gz", hash = "sha256:75e97ce10b74700deaf87b662539a293c8afc9dfa9d21f126b860118064cb0c5"},
-    {file = "sphinx_tabs-3.4.0-py3-none-any.whl", hash = "sha256:31dbe7594b5ef4cfa76a7960448d4607dca167ff21467000213920572c302072"},
+    {file = "sphinx-tabs-3.3.1.tar.gz", hash = "sha256:d10dd7fb2700329b8e5948ab9f8e3ef54fff30f79d2e42cfd1b0089ae26e8c5e"},
+    {file = "sphinx_tabs-3.3.1-py3-none-any.whl", hash = "sha256:73209aa769246501f6de9e33051cfd2d54f5900e0cc28a63367d8e4af4c0db5d"},
 ]
 
 [package.dependencies]
 docutils = ">=0.17.0,<0.18.0"
-jinja2 = "<3.1.0"
 pygments = "*"
-sphinx = ">=2,<6"
+sphinx = ">=2,<5"
 
 [package.extras]
 code-style = ["pre-commit (==2.13.0)"]
-testing = ["bs4", "coverage", "pygments", "pytest (>=7.1,<8)", "pytest-cov", "pytest-regressions", "rinohtype", "sphinx-testing"]
+testing = ["bs4", "coverage", "pygments", "pytest (>=3.6,<4)", "pytest-cov", "pytest-regressions", "rinohtype", "sphinx-testing"]
 
 [[package]]
 name = "sphinx-toolbox"
