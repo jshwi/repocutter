@@ -82,7 +82,6 @@ html_theme_options = {
     "site_url": "https://repocutter.readthedocs.io/",
     "repo_url": "https://github.com/jshwi/repocutter/",
     "repo_name": "repocutter",
-    "repo_type": "github",
     "edit_uri": "blob/master/docs",
     "globaltoc_collapse": True,
     "features": [
