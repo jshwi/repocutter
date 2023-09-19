@@ -71,7 +71,7 @@ version = "0.6.1"
 
 [tool.poetry.dependencies]
 appdirs = "^1.4.4"
-arcon = "^0.2.0"
+arcon = ">=0.2,<0.4"
 checksumdir = "^1.2.0"
 cookiecutter = "^2.1.1"
 gitspy = "^0.3.0"
