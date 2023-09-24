@@ -596,6 +596,24 @@ files = [
 ]
 
 [[package]]
+name = "deptry"
+version = "0.12.0"
+description = "A command line utility to check for unused, missing and transitive dependencies in a Python project."
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "deptry-0.12.0-py3-none-any.whl", hash = "sha256:69c801a6ae1b39c7b8e0daf40dbe8b75f1f161277d206dd8f921f32cd22dad91"},
+    {file = "deptry-0.12.0.tar.gz", hash = "sha256:ac3cd32d149c92a9af12f63cd9486ddd1760f0277ed0cf306c6ef0388f57ff0a"},
+]
+
+[package.dependencies]
+chardet = ">=4.0.0"
+click = ">=8.0.0,<9.0.0"
+colorama = {version = ">=0.4.6", markers = "sys_platform == \"win32\""}
+pathspec = ">=0.9.0"
+tomli = {version = ">=2.0.1,<3.0.0", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "dict2css"
 version = "0.3.0"
 description = "A μ-library for constructing cascading style sheets from Python dictionaries."
@@ -2650,4 +2668,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "bdb960962a441971bd865275499593d7e381c42733b4f05a9dd0e6260dad0d40"
+content-hash = "71d53f6abbe7efe7e1dccf5eb3e20ef9bb890728fd9cfe62cf065572eda7e319"
