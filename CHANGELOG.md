@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [Unreleased](https://github.com/jshwi/repocutter/compare/v0.6.1...HEAD)
 ------------------------------------------------------------------------
+### Security
+- update dependencies
 
 [0.6.1](https://github.com/jshwi/repocutter/releases/tag/v0.6.1) - 2023-01-24
 ------------------------------------------------------------------------
