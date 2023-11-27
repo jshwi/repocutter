@@ -85,13 +85,13 @@ files = [
 
 [[package]]
 name = "arcon"
-version = "0.3.0"
+version = "0.3.1"
 description = "Persistent runtime config"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "arcon-0.3.0-py3-none-any.whl", hash = "sha256:1aa243bb2df8413636ea734b0fa36496dc1b47c4c72fcd7a9efe9450ce2d59ec"},
-    {file = "arcon-0.3.0.tar.gz", hash = "sha256:90699c8e04ceb2e5fb361d025a06fa0882484ce82dfa0a2440a95603b7f7cf40"},
+    {file = "arcon-0.3.1-py3-none-any.whl", hash = "sha256:164f91ea41b23dcc04570a620e23eb0ab1492ff5ff7c9059e0b8ddb6bdcfbd20"},
+    {file = "arcon-0.3.1.tar.gz", hash = "sha256:49e904f7675a62161f6b9e1bee6979772317f9c0d4c28ae4bd04c5d0e22d11d9"},
 ]
 
 [package.dependencies]
