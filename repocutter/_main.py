@@ -4,6 +4,7 @@ repocutter._main
 
 Contains package entry point.
 """
+
 from __future__ import annotations
 
 import contextlib as _contextlib
