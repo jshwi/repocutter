@@ -713,22 +713,21 @@ tomli = ["tomli (>=2.0.0,<3.0.0)"]
 
 [[package]]
 name = "docsig"
-version = "0.45.0"
+version = "0.56.0"
 description = "Check signature params for proper documentation"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "docsig-0.45.0-py3-none-any.whl", hash = "sha256:d6a1c64218cc9b2e9a91544b2685c95ba08f2cea5906774f2c99e3a59d23c834"},
-    {file = "docsig-0.45.0.tar.gz", hash = "sha256:08bfe7df66ec8bce7f765a93c07a380c20ca06625fcc3396a3d72dcee275137c"},
+    {file = "docsig-0.56.0-py3-none-any.whl", hash = "sha256:53afb796cc1a54870739392bb2d8d32e792b74052c25c0da952490fa04bc430f"},
+    {file = "docsig-0.56.0.tar.gz", hash = "sha256:f73761ab1509da9652579bc68e76c53b75423dd1f4cc3b5efb380170d86aa8d5"},
 ]
 
 [package.dependencies]
-arcon = ">=0.3.1"
+arcon = ">=0.4.0"
 astroid = ">=3.0.1,<4.0.0"
-object-colors = ">=2.1.0,<3.0.0"
-Pygments = ">=2.13.0,<3.0.0"
+click = ">=8.1.7,<9.0.0"
+pathspec = ">=0.12.1,<0.13.0"
 Sphinx = ">=7.0.0,<8.0.0"
-typing-extensions = ">=4.8.0,<5.0.0"
 
 [[package]]
 name = "docutils"
@@ -1664,8 +1663,8 @@ files = [
 annotated-types = ">=0.4.0"
 pydantic-core = "2.20.1"
 typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
     {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
 ]
 
 [package.extras]
@@ -1840,8 +1839,8 @@ files = [
 astroid = ">=3.2.4,<=3.3.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
-    {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
     {version = ">=0.2", markers = "python_version < \"3.11\""},
+    {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
     {version = ">=0.3.6", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
 ]
 isort = ">=4.2.5,<5.13.0 || >5.13.0,<6"
@@ -2591,14 +2590,17 @@ widechars = ["wcwidth"]
 
 [[package]]
 name = "templatest"
-version = "0.8.0"
+version = "0.10.1"
 description = "Templates for testing with strings"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "templatest-0.8.0-py3-none-any.whl", hash = "sha256:aa9c3b918915f57f1751bdf961b06577630e2c741b8f207ff5f985def64750b0"},
-    {file = "templatest-0.8.0.tar.gz", hash = "sha256:c808360bf0791cc5629f6baf8002f48159c11bd18f6b53096cc089ceada91dd2"},
+    {file = "templatest-0.10.1-py3-none-any.whl", hash = "sha256:cee4d29d1939ef735a0c9f2c64778f8db6c8559a04096ee435684172e04f48de"},
+    {file = "templatest-0.10.1.tar.gz", hash = "sha256:bbc61ca7fc77127f9f7761af7a9db08ed4b4963887b41a01fe7715543e02991a"},
 ]
+
+[package.dependencies]
+typing-extensions = ">=4.8.0,<5.0.0"
 
 [[package]]
 name = "text-unidecode"
@@ -2825,4 +2827,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "2f009d08e0ae24b564f3afdd74e2f8453e8a0464c762ed234f32cc41c4e1da0c"
+content-hash = "e44d4512741dabdaa1a14dc9e474659a050f771ad94bf53196481064e9541506"
