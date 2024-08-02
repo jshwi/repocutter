@@ -85,13 +85,13 @@ files = [
 
 [[package]]
 name = "arcon"
-version = "0.3.1"
+version = "0.4.0"
 description = "Persistent runtime config"
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = "<4.0,>=3.8"
 files = [
-    {file = "arcon-0.3.1-py3-none-any.whl", hash = "sha256:164f91ea41b23dcc04570a620e23eb0ab1492ff5ff7c9059e0b8ddb6bdcfbd20"},
-    {file = "arcon-0.3.1.tar.gz", hash = "sha256:49e904f7675a62161f6b9e1bee6979772317f9c0d4c28ae4bd04c5d0e22d11d9"},
+    {file = "arcon-0.4.0-py3-none-any.whl", hash = "sha256:19488bca11b6facb59c2d3f587e8685aa6afc99764b0956fa2c2837fc0fff6a9"},
+    {file = "arcon-0.4.0.tar.gz", hash = "sha256:b243f265d5f1eacf0025d072ef4d3385b0f33c20b247d017a25948b3b19805b1"},
 ]
 
 [package.dependencies]
@@ -1664,8 +1664,8 @@ files = [
 annotated-types = ">=0.4.0"
 pydantic-core = "2.20.1"
 typing-extensions = [
-    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
     {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
+    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
 ]
 
 [package.extras]
@@ -1840,8 +1840,8 @@ files = [
 astroid = ">=3.2.4,<=3.3.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
-    {version = ">=0.2", markers = "python_version < \"3.11\""},
     {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
+    {version = ">=0.2", markers = "python_version < \"3.11\""},
     {version = ">=0.3.6", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
 ]
 isort = ">=4.2.5,<5.13.0 || >5.13.0,<6"
@@ -2825,4 +2825,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "2efbe2cbd510756922639782130fd5f3f6b61f27038572061af78b3c2c4254ae"
+content-hash = "2f009d08e0ae24b564f3afdd74e2f8453e8a0464c762ed234f32cc41c4e1da0c"
